@@ -16,6 +16,7 @@ const ptBR: Locale = {
   localize: {
     month: (n) => ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][n],
     day: (n) => ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][n],
+    ordinalNumber: (n) => String(n),
   },
   formatters: {
     formatMonthCaption: (date) => date.toLocaleString("pt-BR", { month: "long", year: "numeric" }),
