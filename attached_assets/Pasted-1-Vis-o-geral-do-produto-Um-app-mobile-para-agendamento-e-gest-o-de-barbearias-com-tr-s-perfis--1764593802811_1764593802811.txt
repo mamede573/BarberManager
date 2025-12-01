@@ -1,0 +1,465 @@
+1 — Visão geral do produto
+
+Um app mobile para agendamento e gestão de barbearias com três perfis:
+
+Cliente: busca barbeiros, agenda serviços, paga e avalia.
+
+Barbeiro / Profissional: gerencia agenda, serviços, preços, fotos do portfólio, atende chat.
+
+Admin / Dono da barbearia (Painel de Gestão): controla prestadores, agenda, pagamentos, estoque, relatórios e marketing.
+
+Objetivos principais:
+
+Facilitar agendamento e pagamento
+
+Reduzir faltas (notificações/confirmacao)
+
+Gerir equipe, estoque e finanças
+
+Melhor experiência cliente (filtros, portfólio e avaliações)
+
+2 — Funcionalidades principais
+Cliente
+
+Cadastro / login (e-mail, telefone + SMS / OTP, OAuth Google/Facebook opcional).
+
+Perfil (foto, nome, telefone, endereço).
+
+Busca e filtro por localização, nota, preço, especialidade (corte, navalha, barba, coloração).
+
+Visualizar perfis dos barbeiros: portfólio, avaliações, serviços e preços, agenda disponível.
+
+Agendamento (selecionar serviço, duração, barbeiro, data/hora).
+
+Pagamento (cartão, PIX, wallet, dinheiro no estabelecimento).
+
+Confirmação, lembretes (push + SMS + e-mail).
+
+Histórico de agendamentos, possibilidade de reagendar/cancelar com regras de política.
+
+Avaliação e comentários.
+
+Favoritos e promoções (cupom).
+
+Chat com o barbeiro (pré e pós-agendamento).
+
+Localização / rota via mapa (link para Google Maps / Waze).
+
+Notificações de promoções e lembretes de manutenção (ex.: "agende seu corte").
+
+Barbeiro / Profissional (App ou área no painel)
+
+Cadastro/validação de documentos (RG/CNPJ, comprovante).
+
+Perfil profissional com horários de trabalho, intervalos e agenda.
+
+Gerenciar serviços e preços, tempo por serviço.
+
+Visualizar e aceitar recusar agendamentos (opcional: auto-aceitar).
+
+Gerenciamento de agenda (bloquear horários, pausas).
+
+Chat com clientes.
+
+Histórico de atendimentos e avaliações.
+
+Relatórios simplificados (ganhos diários/semanais).
+
+Controle de comissões (se plataforma retém %).
+
+Check-in / check-out do atendimento.
+
+Notificações push/SMS de novos agendamentos/cancelamentos.
+
+Gestão de estoque (produtos usados — opcional).
+
+Admin / Painel Web
+
+CRUD de barbearias / barbeiros / clientes.
+
+Gerenciar categorias/serviços e comissões.
+
+Aprovação/verificação de profissionais.
+
+Tarifas e promoções, cupons.
+
+Dashboard com KPIs: receita, agendamentos, taxa de ocupação, avaliações.
+
+Relatórios exportáveis (CSV/PDF).
+
+Controle financeiro: pagamentos recebidos, repasses a profissionais.
+
+Configurações de regras (política de cancelamento, horários).
+
+Sistema de suporte / tickets.
+
+Gestão de filas (opcional: fila de espera).
+
+Logs e auditoria.
+
+3 — Fluxos principais (resumido)
+
+Cliente busca → vê perfil → escolhe serviço e horário → paga/confirmar → notificação p/ barbeiro → atendimento → cliente avalia.
+
+Barbeiro bloqueia horário → recebe notificação → aceita → realiza atendimento → marca como concluído → sistema paga comissão / atualiza saldo.
+
+Admin monitora KPIs → gera repasse semanal/mensal → resolve tickets.
+
+4 — Arquitetura sugerida (tech stack)
+
+Opções (você já trabalha com PHP/MySQL; dou duas sugestões):
+
+A — Stack PHP (familiar)
+
+Mobile: React Native + Expo + TypeScript
+
+Backend: Laravel (PHP) + MySQL
+
+Autenticação: Laravel Sanctum / Passport (API tokens)
+
+Pagamentos: Stripe / PagSeguro / Mercado Pago + PIX
+
+Notificações: Firebase Cloud Messaging (FCM)
+
+Armazenamento de arquivos: AWS S3 / DigitalOcean Spaces
+
+Hospedagem: VPS (DigitalOcean), ou PaaS (Render, Heroku-like), banco em managed MySQL
+
+CI/CD: GitHub Actions
+
+Painel Admin: Laravel + Nova / Voyager ou front em React (Next.js) consumindo a mesma API
+
+B — Stack Node (alternativa moderna)
+
+Mobile: React Native + Expo + TypeScript
+
+Backend: Node.js + NestJS / Express + TypeORM + MySQL
+
+Autenticação: JWT + refresh tokens
+
+Pagamentos: Stripe/Mercado Pago
+
+Notificações: FCM
+
+Painel Admin: React + Tailwind ou painel pronto (React Admin)
+
+Vou usar como base Laravel + MySQL nos exemplos abaixo (pela sua familiaridade com PHP/MySQL).
+
+5 — Modelagem de dados (ER simplificado)
+
+Principais tabelas (colunas chave):
+
+users (id, name, email, phone, password_hash, role ['client','barber','admin'], avatar, created_at, ...)
+
+profiles_barber (id, user_id, bio, rating_avg, services_offered JSON or relation, doc_status, bank_info, created_at)
+
+services (id, barber_id, title, description, duration_minutes, price, created_at)
+
+schedules (id, barber_id, date, start_time, end_time, status ['free','booked','blocked'])
+
+appointments (id, client_id, barber_id, service_id, start_datetime, end_datetime, status ['pending','confirmed','in_progress','completed','cancelled'], price, payment_status, created_at)
+
+payments (id, appointment_id, amount, method, status, provider_tx_id, fee, created_at)
+
+reviews (id, appointment_id, client_id, barber_id, rating, comment, created_at)
+
+notifications (id, user_id, type, payload JSON, read_at)
+
+wallets (id, user_id, balance, currency)
+
+coupons (id, code, discount_type, value, valid_from, valid_to, usage_limit)
+
+inventory_products (id, barber_id, name, qty, cost, price)
+
+transactions (id, user_id, type, amount, description, created_at)
+
+logs / audit (id, user_id, action, payload, created_at)
+
+6 — Exemplo de schema SQL (essencial)
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150),
+  email VARCHAR(150) UNIQUE,
+  phone VARCHAR(30),
+  password VARCHAR(255),
+  role ENUM('client','barber','admin') DEFAULT 'client',
+  avatar VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE profiles_barber (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  bio TEXT,
+  rating_avg DECIMAL(3,2) DEFAULT 0,
+  doc_status ENUM('pending','approved','rejected') DEFAULT 'pending',
+  bank_info JSON,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE services (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  barber_id INT NOT NULL,
+  title VARCHAR(120),
+  description TEXT,
+  duration_minutes INT,
+  price DECIMAL(10,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (barber_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE appointments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  client_id INT NOT NULL,
+  barber_id INT NOT NULL,
+  service_id INT NOT NULL,
+  start_datetime DATETIME,
+  end_datetime DATETIME,
+  status ENUM('pending','confirmed','in_progress','completed','cancelled') DEFAULT 'pending',
+  price DECIMAL(10,2),
+  payment_status ENUM('pending','paid','refunded') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (client_id) REFERENCES users(id),
+  FOREIGN KEY (barber_id) REFERENCES users(id),
+  FOREIGN KEY (service_id) REFERENCES services(id)
+);
+
+-- payments, reviews, coupons, etc.
+
+7 — Endpoints API (RESTful) — exemplos essenciais
+
+(Autenticação via token)
+
+Auth
+
+POST /api/auth/register {name,email,phone,password,role}
+
+POST /api/auth/login {email,password} → returns token
+
+POST /api/auth/forgot-password
+
+POST /api/auth/verify-otp
+
+Clientes
+
+GET /api/barbers?lat=&lng=&distance=&service=&rating=
+
+GET /api/barbers/{id} → perfil + serviços + agenda disponível
+
+GET /api/services/{id}
+
+POST /api/appointments → cria agendamento
+
+PUT /api/appointments/{id}/cancel
+
+GET /api/appointments (history)
+
+POST /api/payments/checkout → cria pagamento
+
+POST /api/reviews → postar avaliação
+
+POST /api/favorites/{barber_id}
+
+Barbeiros
+
+GET /api/barber/dashboard
+
+GET /api/barber/appointments
+
+PATCH /api/barber/appointments/{id}/status
+
+POST /api/barber/services
+
+PUT /api/barber/services/{id}
+
+POST /api/barber/schedule/block
+
+Admin
+
+GET /api/admin/users
+
+POST /api/admin/approve-barber/{id}
+
+GET /api/admin/reports?from=&to=&type=
+
+Realtime / Chat
+
+WS /socket or Pusher channels para chat e atualizações de agenda.
+
+8 — Regras importantes / políticas
+
+Política de cancelamento (ex.: free até 12h antes; após isso, multa ou bloqueio).
+
+Timeout para confirmação (ex.: agendamento fica 'pending' por 15 minutos até pagamento ou confirmação).
+
+Taxa de não comparecimento (registrar faltas e aplicar penalidades).
+
+Repasses de valores: plataforma retém X% + taxa; repasses automáticos via integração bancária/PIX.
+
+9 — Integrações necessárias
+
+Pagamentos: Stripe (internacional) / Mercado Pago / PagSeguro / Pagar.me (Brasil). PIX via provedor.
+
+SMS/OTP: Twilio / Zenvia / Ploomes (Brasil) / serviço local.
+
+Push notifications: Firebase Cloud Messaging (FCM).
+
+Mapas/Geolocalização: Google Maps API / Mapbox.
+
+Storage de fotos: AWS S3 / DigitalOcean Spaces.
+
+Email: SendGrid / Mailgun / Amazon SES.
+
+Real-time chat: Pusher / Socket.IO + Redis.
+
+10 — Segurança
+
+HTTPS obrigatório (TLS).
+
+Armazenar senhas com bcrypt/argon2.
+
+Validação e rate-limiting em endpoints (evitar abuso).
+
+Proteção contra sobreposição de horários (transações DB/lock).
+
+Autorização por roles e validação de ownership (ex.: apenas dono pode alterar agendamento).
+
+Armazenar logs de auditoria.
+
+Proteção contra fraudes (monitorar chargebacks).
+
+11 — Painel Admin — funcionalidades UI
+
+Dashboard resumo (receita, agendamentos hoje, ocupação).
+
+Lista de barbeiros (status verificado, documentos).
+
+Calendário com agendamentos (drag-n-drop para reagendar).
+
+Relatórios financeiros (filtro por período).
+
+Gestão de cupons e promoções.
+
+Gestão de categorias e serviços.
+
+Configurações da plataforma (taxas, horários de funcionamento globais).
+
+Área de suporte (tickets).
+
+Export CSV e PDF.
+
+12 — UX / Telas (Mobile)
+
+Cliente
+
+Splash → Onboarding (opcional) → Login/Cadastro → Home (busca + destaques) → Tela de resultados → Perfil do barbeiro → Selecionar serviço + calendário → Checkout → Confirmado → Chat / Histórico / Perfil
+
+Barbeiro
+
+Login → Dashboard (próximos atendimentos) → Agenda (dia/semana) → Visualizar/aceitar agendamentos → Serviços → Ganhos → Perfil
+
+Admin (web)
+
+Login → Dashboard → Calendário → Financeiro → Usuários → Configurações
+
+13 — Notificações (exemplos)
+
+Push + Email + SMS: novo agendamento, pedido confirmado, lembrete 24h e 1h antes, cliente chegou (check-in), avaliação postada, promoção.
+
+14 — Pagamentos & fluxos monetários
+
+Cliente paga no app: plataforma processa via gateway → valor líquido retido para repasse.
+
+Implementar wallets/creditos (opcional).
+
+Registrar taxas, comissões e gera transações para repasse manual/automático.
+
+Gerar recibos e faturas.
+
+15 — Relatórios e KPIs a acompanhar
+
+Receita total / por barbeiro
+
+Nº de agendamentos confirmados / cancelados
+
+Taxa de ocupação (por horário/dia)
+
+Ticket médio
+
+Avaliação média
+
+Clientes ativos (últimos 30/90 dias)
+
+Faltas / no-shows
+
+16 — Deploy / Infraestrutura (mínimo viável)
+
+Backend: VPS (DigitalOcean / AWS EC2) ou PaaS (Render, Railway).
+
+Banco: Managed MySQL (PlanetScale, Amazon RDS, DigitalOcean Managed DB).
+
+Storage: S3
+
+FCM para push
+
+Domain + HTTPS via Let's Encrypt
+
+CI: GitHub Actions -> deploy automático
+
+17 — Testes e QA
+
+Testes unitários e integração (backend).
+
+Testes end-to-end (Cypress / Playwright) para painel.
+
+Testes manuais do fluxo de agendamento e pagamentos.
+
+Teste de concorrência: bloquear dupla reserva de horário.
+
+18 — Checklist mínimo para MVP
+
+Autenticação (client + barber)
+
+Listagem e perfil de barbeiros
+
+Criação de serviços por barbeiros
+
+Sistema de agendamento com verificação de conflitos
+
+Pagamento integrado (um gateway)
+
+Notificações (push básico)
+
+Painel Admin básico (listar usuários, aprovar barbeiros)
+
+Avaliações e histórico
+
+19 — Exemplo de responsividade do contrato entre cliente/barbeiro (pseudocódigo)
+
+Ao criar agendamento:
+
+Iniciar transação DB
+
+Verificar disponibilidade (SELECT ... FOR UPDATE)
+
+Inserir appointment status pending
+
+Se for pagamento instantâneo, chamar gateway; se sucesso, marcar paid + confirmar
+
+Commit
+
+20 — Próximos passos práticos (o que eu posso gerar agora)
+
+Gerar SQL completo das tabelas (já iniciei o básico).
+
+Gerar controllers em Laravel (routes, exemplos).
+
+Gerar telas React Native em .tsx (Login, Home, Perfil de barbeiro, Agendamento, Checkout).
+
+Gerar painel admin em React (Next.js) com calendário e lista.
+
+Criar documentação de API (OpenAPI / Swagger).
+
+Criar scripts de deploy (Docker + docker-compose).
+
+Diga qual destes itens quer que eu gere agora (por exemplo: “me dê o schema SQL completo + migrations para Laravel”, ou “gere as telas em React Native .tsx: Login, Home e Perfil do barbeiro”), que eu já vou preparar para você. ✂️💈
