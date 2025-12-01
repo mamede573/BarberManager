@@ -234,10 +234,32 @@ export async function registerRoutes(
 
   app.post("/api/appointments", async (req, res) => {
     try {
-      const data = insertAppointmentSchema.parse(req.body);
+      const { clientId, barberId, serviceIds, date, time, totalPrice, paymentMethod } = req.body;
+      
+      // Validate required fields
+      if (!clientId || !barberId || !serviceIds || !date || !time || !totalPrice) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Ensure serviceIds is an array
+      const serviceIdsArray = Array.isArray(serviceIds) ? serviceIds : [serviceIds];
+
+      const data = insertAppointmentSchema.parse({
+        clientId,
+        barberId,
+        serviceIds: serviceIdsArray,
+        date: new Date(date),
+        time,
+        totalPrice: String(totalPrice),
+        paymentMethod: paymentMethod || "cash",
+        status: "confirmed",
+        paymentStatus: "pending",
+      });
+
       const appointment = await storage.createAppointment(data);
       res.status(201).json(appointment);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Appointment creation error:", error);
       res.status(400).json({ message: "Invalid appointment data" });
     }
   });

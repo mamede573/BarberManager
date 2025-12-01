@@ -80,11 +80,16 @@ export default function BookingConfirmationStep() {
       return;
     }
 
+    // Format date as "YYYY-MM-DD HH:mm:ss" for timestamp
+    const dateObj = new Date(date);
+    const [hours, minutes] = time.split(":").map(Number);
+    dateObj.setHours(hours, minutes, 0, 0);
+
     createAppointmentMutation.mutate({
       clientId: user.id,
       barberId: barberId,
       serviceIds: [serviceId],
-      date: new Date(date),
+      date: dateObj,
       time: time,
       totalPrice: servicePrice,
       paymentMethod: paymentMethod === "pix" ? "pix" : "cash",
