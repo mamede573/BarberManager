@@ -1,22 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
 import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import { createAppointment } from "@/lib/api";
+import type { Service } from "@shared/schema";
+
+interface BookingData {
+  barberId: string;
+  barberName: string;
+  services: Service[];
+  total: string;
+}
 
 export default function Booking() {
   const [, setLocation] = useLocation();
-  const [step, setStep] = useState(1); // 1: Date/Time, 2: Review/Pay, 3: Success
+  const [step, setStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [bookingData, setBookingData] = useState<BookingData | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("bookingData");
+    if (stored) {
+      setBookingData(JSON.parse(stored));
+    }
+  }, []);
+
+  const createAppointmentMutation = useMutation({
+    mutationFn: createAppointment,
+    onSuccess: () => {
+      sessionStorage.removeItem("bookingData");
+      setStep(3);
+    },
+    onError: (error) => {
+      console.error("Failed to create appointment:", error);
+    },
+  });
 
   const timeSlots = [
     "10:00 AM", "10:45 AM", "11:30 AM", 
     "1:00 PM", "1:45 PM", "2:30 PM", 
     "4:00 PM", "4:45 PM"
   ];
+
+  const handleConfirmBooking = () => {
+    if (!bookingData || !date || !selectedTime) return;
+
+    createAppointmentMutation.mutate({
+      clientId: "demo-user-id",
+      barberId: bookingData.barberId,
+      serviceIds: bookingData.services.map(s => s.id),
+      date: date,
+      time: selectedTime,
+      totalPrice: bookingData.total,
+      paymentMethod: "card",
+    });
+  };
 
   const renderStep1 = () => (
     <div className="space-y-6">
@@ -28,6 +71,7 @@ export default function Booking() {
             selected={date}
             onSelect={setDate}
             className="rounded-md text-white"
+            disabled={(date) => date < new Date()}
           />
         </div>
       </div>
@@ -45,6 +89,7 @@ export default function Booking() {
                   ? "bg-primary text-black border-primary"
                   : "bg-card text-muted-foreground border-white/5 hover:bg-white/5"
               )}
+              data-testid={`time-slot-${time.replace(/\s/g, "-")}`}
             >
               {time}
             </button>
@@ -69,29 +114,24 @@ export default function Booking() {
         </div>
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Barber</span>
-          <span className="font-medium text-white">Jack 'The Clipper'</span>
+          <span className="font-medium text-white">{bookingData?.barberName}</span>
         </div>
         
-        <div className="border-t border-white/10 pt-4 mt-4">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <p className="font-medium text-white">Classic Haircut</p>
-              <p className="text-xs text-muted-foreground">45 mins</p>
+        <div className="border-t border-white/10 pt-4 mt-4 space-y-2">
+          {bookingData?.services.map((service) => (
+            <div key={service.id} className="flex justify-between items-start">
+              <div>
+                <p className="font-medium text-white">{service.name}</p>
+                <p className="text-xs text-muted-foreground">{service.duration} mins</p>
+              </div>
+              <span className="font-bold text-white">${parseFloat(service.price).toFixed(2)}</span>
             </div>
-            <span className="font-bold text-white">$35.00</span>
-          </div>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-medium text-white">Beard Trim</p>
-              <p className="text-xs text-muted-foreground">30 mins</p>
-            </div>
-            <span className="font-bold text-white">$25.00</span>
-          </div>
+          ))}
         </div>
 
         <div className="border-t border-white/10 pt-4 flex justify-between items-center">
           <span className="font-bold text-lg text-white">Total</span>
-          <span className="font-bold text-xl text-primary">$60.00</span>
+          <span className="font-bold text-xl text-primary" data-testid="text-booking-total">${bookingData?.total}</span>
         </div>
       </div>
 
@@ -125,7 +165,7 @@ export default function Booking() {
       </div>
       <h2 className="text-3xl font-bold font-display text-white mb-2">Booking Confirmed!</h2>
       <p className="text-muted-foreground mb-8">
-        Your appointment with Jack is set for {date?.toLocaleDateString()} at {selectedTime}.
+        Your appointment with {bookingData?.barberName} is set for {date?.toLocaleDateString()} at {selectedTime}.
       </p>
       
       <div className="w-full space-y-3">
@@ -133,6 +173,7 @@ export default function Booking() {
           size="lg" 
           className="w-full bg-primary text-black hover:bg-primary/90 font-bold rounded-xl"
           onClick={() => setLocation("/")}
+          data-testid="button-back-home"
         >
           Back to Home
         </Button>
@@ -147,6 +188,21 @@ export default function Booking() {
     </div>
   );
 
+  if (!bookingData && step < 3) {
+    return (
+      <MobileShell hideNav>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">No services selected</p>
+            <Link href="/">
+              <Button>Go Back</Button>
+            </Link>
+          </div>
+        </div>
+      </MobileShell>
+    );
+  }
+
   return (
     <MobileShell hideNav>
       {step < 3 && (
@@ -155,7 +211,8 @@ export default function Booking() {
             variant="ghost" 
             size="icon" 
             className="hover:bg-white/5 -ml-2"
-            onClick={() => step === 1 ? setLocation("/barber/1") : setStep(step - 1)}
+            onClick={() => step === 1 ? setLocation(`/barber/${bookingData?.barberId}`) : setStep(step - 1)}
+            data-testid="button-booking-back"
           >
             <ChevronLeft className="w-6 h-6" />
           </Button>
@@ -176,10 +233,11 @@ export default function Booking() {
           <Button 
             size="lg" 
             className="w-full bg-primary text-black hover:bg-primary/90 font-bold rounded-xl h-12"
-            disabled={step === 1 && !selectedTime}
-            onClick={() => setStep(step + 1)}
+            disabled={(step === 1 && !selectedTime) || createAppointmentMutation.isPending}
+            onClick={() => step === 1 ? setStep(2) : handleConfirmBooking()}
+            data-testid="button-booking-continue"
           >
-            {step === 1 ? "Continue" : "Pay & Confirm"}
+            {createAppointmentMutation.isPending ? "Processing..." : step === 1 ? "Continue" : "Pay & Confirm"}
           </Button>
         </div>
       )}
