@@ -22,6 +22,7 @@ export default function Profile() {
     name: user?.name || "",
     phone: user?.phone || "",
     email: user?.email || "",
+    avatar: user?.avatar || null,
   }));
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function Profile() {
         name: user.name || "",
         phone: user.phone || "",
         email: user.email || "",
+        avatar: user.avatar || null,
       });
     }
   }, [user, setLocation]);
@@ -42,6 +44,7 @@ export default function Profile() {
       await updateUser({
         name: editFormData.name,
         phone: editFormData.phone,
+        avatar: editFormData.avatar,
       });
       setIsEditing(false);
     } catch (error) {
@@ -98,13 +101,36 @@ export default function Profile() {
             {/* Profile Content */}
             <div className="px-6 pb-6 -mt-12 relative z-10">
               {/* Avatar */}
-              <div className="flex items-end gap-4 mb-6">
-                <img
-                  src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`}
-                  alt={user.name}
-                  className="w-24 h-24 rounded-full border-4 border-card/80 backdrop-blur-md object-cover shadow-lg"
-                  data-testid="avatar-profile"
-                />
+              <div className="flex items-end gap-4 mb-6 relative">
+                <div className="relative">
+                  <img
+                    src={isEditing ? (editFormData.avatar || `https://i.pravatar.cc/150?u=${user.id}`) : (user.avatar || `https://i.pravatar.cc/150?u=${user.id}`)}
+                    alt={user.name}
+                    className="w-24 h-24 rounded-full border-4 border-card/80 backdrop-blur-md object-cover shadow-lg"
+                    data-testid="avatar-profile"
+                  />
+                  {isEditing && (
+                    <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer group">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setEditFormData({ ...editFormData, avatar: event.target?.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                        data-testid="input-avatar-file"
+                      />
+                      <Edit2 className="w-6 h-6 text-white" />
+                    </label>
+                  )}
+                </div>
                 {!isEditing && (
                   <Button
                     size="sm"
@@ -173,6 +199,7 @@ export default function Profile() {
                             name: user.name || "",
                             phone: user.phone || "",
                             email: user.email || "",
+                            avatar: user.avatar || null,
                           });
                         }
                       }}
