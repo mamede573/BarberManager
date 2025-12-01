@@ -80,16 +80,13 @@ export default function BookingConfirmationStep() {
       return;
     }
 
-    // Format date as "YYYY-MM-DD HH:mm:ss" for timestamp
-    const dateObj = new Date(date);
-    const [hours, minutes] = time.split(":").map(Number);
-    dateObj.setHours(hours, minutes, 0, 0);
-
+    // Send date as-is (already in YYYY-MM-DD format from SelectDateStep)
+    // Time is sent separately to avoid timezone issues
     createAppointmentMutation.mutate({
       clientId: user.id,
       barberId: barberId,
       serviceIds: [serviceId],
-      date: dateObj,
+      date: new Date(date), // Simple date conversion without setHours
       time: time,
       totalPrice: servicePrice,
       paymentMethod: paymentMethod === "pix" ? "pix" : "cash",
