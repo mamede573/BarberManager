@@ -67,7 +67,7 @@ const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00"
 export default function Bookings() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
+  const [filter, setFilter] = useState<"all" | "upcoming" | "completed" | "cancelled">("all");
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -133,7 +133,7 @@ export default function Bookings() {
   const handleDateSelect = async (appointment: BookingItem, date: string) => {
     setSelectedDate(date);
     try {
-      const slots = await getAvailableSlots(appointment.barberId, new Date(date), appointment.serviceIds || []);
+      const slots = await getAvailableSlots(appointment.barberId, date, appointment.serviceIds || []);
       setAvailableSlots(slots);
     } catch (error) {
       toast.error("Erro ao carregar horários disponíveis");
@@ -153,8 +153,9 @@ export default function Bookings() {
   };
 
   const filteredBookings = appointments.filter((booking: BookingItem) => {
-    if (filter === "upcoming") return isUpcoming(booking.date);
-    if (filter === "completed") return !isUpcoming(booking.date);
+    if (filter === "upcoming") return booking.status !== "cancelled" && isUpcoming(booking.date);
+    if (filter === "completed") return booking.status === "completed";
+    if (filter === "cancelled") return booking.status === "cancelled";
     return true;
   });
 
@@ -175,22 +176,28 @@ export default function Bookings() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="px-6 flex gap-2">
-          {(["all", "upcoming", "completed"] as const).map((tab) => {
-            const labels = { all: "Todos", upcoming: "Próximos", completed: "Concluídos" };
+        <div className="px-6 flex gap-2 overflow-x-auto pb-2">
+          {(["all", "upcoming", "completed", "cancelled"] as const).map((tab) => {
+            const labels = { all: "Todos", upcoming: "Próximos", completed: "Concluídos", cancelled: "Cancelados" };
+            const counts = {
+              all: appointments.length,
+              upcoming: appointments.filter((a: BookingItem) => a.status !== "cancelled" && isUpcoming(a.date)).length,
+              completed: appointments.filter((a: BookingItem) => a.status === "completed").length,
+              cancelled: appointments.filter((a: BookingItem) => a.status === "cancelled").length,
+            };
             return (
               <motion.button
                 key={tab}
                 onClick={() => setFilter(tab)}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-xs font-bold transition-all border",
+                  "px-4 py-2 rounded-lg text-xs font-bold transition-all border whitespace-nowrap",
                   filter === tab
                     ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
                     : "bg-secondary/50 text-muted-foreground border-white/10 hover:border-white/20"
                 )}
                 data-testid={`filter-${tab}`}
               >
-                {labels[tab]}
+                {labels[tab]} <span className="ml-1.5 opacity-75">({counts[tab]})</span>
               </motion.button>
             );
           })}
