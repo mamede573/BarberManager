@@ -195,10 +195,13 @@ export class DatabaseStorage implements IStorage {
     const bookedAppointments = await db.select().from(appointments)
       .where(eq(appointments.barberId, barberId));
     
-    const appointmentsOnDate = bookedAppointments.filter(appt => 
-      appt.date.toDateString() === new Date(date).toDateString() &&
-      (appt.status === "confirmed" || appt.status === "pending")
-    );
+    // Convert dates to YYYY-MM-DD format for comparison (ignores time/timezone)
+    const targetDateStr = date.toISOString().split("T")[0];
+    
+    const appointmentsOnDate = bookedAppointments.filter(appt => {
+      const apptDateStr = appt.date.toISOString().split("T")[0];
+      return apptDateStr === targetDateStr && (appt.status === "confirmed" || appt.status === "pending");
+    });
     
     // Build time slots that are blocked by existing appointments
     const blockedTimeRanges: Array<{ start: number; end: number }> = [];
