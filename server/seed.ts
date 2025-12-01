@@ -6,12 +6,12 @@ async function seed() {
 
   // Create categories
   const categoryData = [
-    { name: "Haircut", icon: "✂️" },
-    { name: "Beard", icon: "🧔" },
-    { name: "Shave", icon: "🪒" },
+    { name: "Corte de Cabelo", icon: "✂️" },
+    { name: "Barba", icon: "🧔" },
+    { name: "Barbear", icon: "🪒" },
     { name: "Facial", icon: "🧖" },
-    { name: "Color", icon: "🎨" },
-    { name: "Kids", icon: "👶" },
+    { name: "Coloração", icon: "🎨" },
+    { name: "Infantil", icon: "👶" },
   ];
 
   const createdCategories = await db.insert(categories).values(categoryData).returning();
