@@ -35,7 +35,7 @@ export default function Signup() {
         email,
         password,
       });
-      setLocation("/");
+      setLocation("/login");
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta. Tente novamente.");
     } finally {
