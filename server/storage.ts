@@ -192,7 +192,7 @@ export class DatabaseStorage implements IStorage {
     
     const bookedAppointments = await db.select().from(appointments)
       .where(eq(appointments.barberId, barberId))
-      .where(eq(appointments.status, "confirmed") || eq(appointments.status, "pending"));
+      .where(or(eq(appointments.status, "confirmed"), eq(appointments.status, "pending")));
     
     const bookedSlots = new Set<string>();
     bookedAppointments.forEach(appt => {

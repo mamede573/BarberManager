@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, MapPin, ArrowRight } from "lucide-react";
+import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, MapPin, ArrowRight, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import { createAppointment } from "@/lib/api";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 import type { Service } from "@shared/schema";
 
 interface BookingData {
@@ -17,9 +19,10 @@ interface BookingData {
   total: string;
 }
 
-type PaymentMethod = "local";
+type PaymentMethod = "local" | "pix";
 
 export default function Booking() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -38,30 +41,34 @@ export default function Booking() {
     mutationFn: createAppointment,
     onSuccess: () => {
       sessionStorage.removeItem("bookingData");
+      toast.success("Agendamento confirmado!");
       setStep(3);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Failed to create appointment:", error);
+      toast.error("Erro ao confirmar agendamento. Tente novamente.");
     },
   });
 
   const timeSlots = [
-    "10:00 AM", "10:45 AM", "11:30 AM", 
-    "1:00 PM", "1:45 PM", "2:30 PM", 
-    "4:00 PM", "4:45 PM"
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
   ];
 
   const handleConfirmBooking = () => {
-    if (!bookingData || !date || !selectedTime) return;
+    if (!bookingData || !date || !selectedTime || !user?.id) {
+      toast.error("Dados incompletos");
+      return;
+    }
 
     createAppointmentMutation.mutate({
-      clientId: "demo-user-id",
+      clientId: user.id,
       barberId: bookingData.barberId,
       serviceIds: bookingData.services.map(s => s.id),
       date: date,
       time: selectedTime,
       totalPrice: bookingData.total,
-      paymentMethod: "local",
+      paymentMethod: selectedPaymentMethod === "pix" ? "pix" : "cash",
     });
   };
 
@@ -126,6 +133,7 @@ export default function Booking() {
   const renderStep2 = () => {
     const paymentMethods = [
       { id: "local" as const, name: "PAGAMENTO NO LOCAL", desc: "Pague na barbearia", icon: MapPin, color: "from-amber-600 to-amber-500" },
+      { id: "pix" as const, name: "PIX", desc: "Transfira via PIX", icon: QrCode, color: "from-blue-600 to-blue-500" },
     ];
 
     return (
@@ -248,6 +256,20 @@ export default function Booking() {
             <p className="text-xs text-amber-300 mb-2">💰 PAGAMENTO NO LOCAL</p>
             <div className="space-y-2">
               <p className="text-white font-semibold">Você pode pagar diretamente na barbearia</p>
+              <p className="text-xs text-muted-foreground">Valor total: R$ {bookingData?.total}</p>
+            </div>
+          </motion.div>
+        )}
+
+        {selectedPaymentMethod === "pix" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-blue-600/20 to-blue-500/10 border border-blue-500/20 rounded-2xl p-4"
+          >
+            <p className="text-xs text-blue-300 mb-2">💳 PAGAMENTO VIA PIX</p>
+            <div className="space-y-2">
+              <p className="text-white font-semibold">Você receberá o código PIX após confirmar</p>
               <p className="text-xs text-muted-foreground">Valor total: R$ {bookingData?.total}</p>
             </div>
           </motion.div>
