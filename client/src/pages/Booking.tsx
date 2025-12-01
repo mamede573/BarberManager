@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, CreditCard } from "lucide-react";
+import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, CreditCard, Wallet, Smartphone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import { createAppointment } from "@/lib/api";
+import { motion } from "framer-motion";
 import type { Service } from "@shared/schema";
 
 interface BookingData {
@@ -16,12 +17,15 @@ interface BookingData {
   total: string;
 }
 
+type PaymentMethod = "card" | "pix" | "apple" | "google";
+
 export default function Booking() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("card");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("bookingData");
@@ -62,101 +66,215 @@ export default function Booking() {
   };
 
   const renderStep1 = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold font-display mb-4">Select Date</h2>
-        <div className="bg-card border border-white/5 rounded-2xl p-3">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <CalendarIcon className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold font-display">Select Date</h2>
+        </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-card to-card/50 border border-white/10 rounded-3xl p-6 shadow-2xl">
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{backgroundImage: "radial-gradient(circle at 20% 50%, #d4af37 0%, transparent 50%)"}} />
+          </div>
           <Calendar
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="rounded-md text-white"
+            className="w-full text-white [&_.rdp]:w-full [&_.rdp-caption]:text-lg [&_.rdp-cell]:p-0 [&_.rdp-day]:rounded-xl [&_.rdp-day_button]:rounded-xl [&_.rdp-day_button]:p-2.5"
             disabled={(date) => date < new Date()}
           />
         </div>
       </div>
 
       <div>
-        <h2 className="text-xl font-bold font-display mb-4">Available Time</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {timeSlots.map((time) => (
-            <button
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold font-display">Available Time Slots</h2>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {timeSlots.map((time, idx) => (
+            <motion.button
               key={time}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
               onClick={() => setSelectedTime(time)}
               className={cn(
-                "py-3 px-2 rounded-xl text-sm font-medium border transition-all",
+                "py-3 px-2 rounded-xl text-xs font-bold border-2 transition-all relative group",
                 selectedTime === time
-                  ? "bg-primary text-black border-primary"
-                  : "bg-card text-muted-foreground border-white/5 hover:bg-white/5"
+                  ? "bg-primary text-black border-primary shadow-lg shadow-primary/50 scale-105"
+                  : "bg-secondary/40 text-muted-foreground border-white/10 hover:border-primary/50 hover:bg-secondary/60"
               )}
               data-testid={`time-slot-${time.replace(/\s/g, "-")}`}
             >
-              {time}
-            </button>
+              <span className={selectedTime === time ? "text-black font-black" : ""}>{time}</span>
+              {selectedTime === time && (
+                <div className="absolute inset-0 rounded-xl border-2 border-primary opacity-50 animate-pulse" />
+              )}
+            </motion.button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground mt-4">💡 Duration: ~{bookingData?.services.reduce((acc, s) => acc + s.duration, 0) || 45} minutes</p>
       </div>
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="bg-card border border-white/5 rounded-2xl p-6 space-y-4">
-        <h3 className="text-lg font-bold font-display border-b border-white/10 pb-4">Booking Summary</h3>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Date</span>
-          <span className="font-medium text-white">{date?.toLocaleDateString()}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Time</span>
-          <span className="font-medium text-white">{selectedTime}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Barber</span>
-          <span className="font-medium text-white">{bookingData?.barberName}</span>
-        </div>
-        
-        <div className="border-t border-white/10 pt-4 mt-4 space-y-2">
-          {bookingData?.services.map((service) => (
-            <div key={service.id} className="flex justify-between items-start">
-              <div>
-                <p className="font-medium text-white">{service.name}</p>
-                <p className="text-xs text-muted-foreground">{service.duration} mins</p>
-              </div>
-              <span className="font-bold text-white">${parseFloat(service.price).toFixed(2)}</span>
+  const renderStep2 = () => {
+    const paymentMethods = [
+      { id: "card" as const, name: "Credit Card", desc: "Visa, Mastercard", icon: CreditCard, color: "from-blue-600 to-blue-500" },
+      { id: "pix" as const, name: "PIX", desc: "Instant transfer", icon: Smartphone, color: "from-purple-600 to-purple-500" },
+      { id: "apple" as const, name: "Apple Pay", desc: "Fast & secure", icon: Wallet, color: "from-gray-800 to-gray-700" },
+      { id: "google" as const, name: "Google Pay", desc: "One-tap payment", icon: Wallet, color: "from-red-600 to-yellow-500" },
+    ];
+
+    return (
+      <div className="space-y-8">
+        {/* Booking Summary Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden bg-gradient-to-br from-card to-card/50 border border-white/10 rounded-3xl p-6 shadow-2xl"
+        >
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -mr-20 -mt-20" />
+          
+          <h3 className="text-lg font-bold font-display mb-6 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">✓</div>
+            Booking Summary
+          </h3>
+          
+          <div className="space-y-4 relative z-10">
+            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+              <span className="text-sm text-muted-foreground">📅 Date</span>
+              <span className="font-bold text-white">{date?.toLocaleDateString()}</span>
             </div>
-          ))}
+            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+              <span className="text-sm text-muted-foreground">🕐 Time</span>
+              <span className="font-bold text-white">{selectedTime}</span>
+            </div>
+            <div className="flex justify-between items-center pb-4 border-b border-white/5">
+              <span className="text-sm text-muted-foreground">✂️ Barber</span>
+              <span className="font-bold text-white">{bookingData?.barberName}</span>
+            </div>
+
+            <div className="bg-white/5 rounded-2xl p-4 space-y-2">
+              {bookingData?.services.map((service) => (
+                <div key={service.id} className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold text-white text-sm">{service.name}</p>
+                    <p className="text-xs text-muted-foreground">{service.duration} min</p>
+                  </div>
+                  <span className="font-bold text-primary">${parseFloat(service.price).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center pt-2 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl p-3">
+              <span className="font-bold text-lg text-white">Total</span>
+              <span className="font-black text-2xl text-primary" data-testid="text-booking-total">${bookingData?.total}</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Payment Methods */}
+        <div>
+          <h3 className="text-lg font-bold font-display mb-4">Choose Payment Method</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {paymentMethods.map((method) => {
+              const Icon = method.icon;
+              const isSelected = selectedPaymentMethod === method.id;
+              
+              return (
+                <motion.button
+                  key={method.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedPaymentMethod(method.id)}
+                  className={cn(
+                    "relative overflow-hidden rounded-2xl p-4 border-2 transition-all duration-300",
+                    isSelected
+                      ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                      : "border-white/10 bg-card hover:border-primary/50 hover:bg-white/5"
+                  )}
+                  data-testid={`payment-method-${method.id}`}
+                >
+                  <div className={cn(
+                    "absolute inset-0 opacity-0 transition-opacity",
+                    isSelected && `bg-gradient-to-br ${method.color} opacity-5`
+                  )} />
+                  
+                  <div className="relative z-10">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all",
+                      isSelected
+                        ? "bg-primary text-black shadow-lg shadow-primary/50"
+                        : "bg-white/10 text-muted-foreground group-hover:bg-primary/20"
+                    )}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <p className="font-bold text-sm text-white text-left">{method.name}</p>
+                    <p className="text-xs text-muted-foreground text-left mt-0.5">{method.desc}</p>
+                  </div>
+
+                  {isSelected && (
+                    <>
+                      <motion.div
+                        layoutId="selectedBorder"
+                        className="absolute inset-0 border-2 border-primary rounded-2xl"
+                        initial={false}
+                      />
+                      <motion.div
+                        className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                      >
+                        <div className="w-1.5 h-1.5 bg-black rounded-full" />
+                      </motion.div>
+                    </>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="border-t border-white/10 pt-4 flex justify-between items-center">
-          <span className="font-bold text-lg text-white">Total</span>
-          <span className="font-bold text-xl text-primary" data-testid="text-booking-total">${bookingData?.total}</span>
-        </div>
-      </div>
+        {/* Card Details */}
+        {selectedPaymentMethod === "card" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-blue-600/20 to-blue-500/10 border border-blue-500/20 rounded-2xl p-4"
+          >
+            <p className="text-xs text-blue-300 mb-2">💳 CARD DETAILS</p>
+            <div className="space-y-2">
+              <div className="font-mono text-white font-bold tracking-wider">•••• •••• •••• 4242</div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Cardholder: Michael A.</span>
+                <span>Expires: 12/25</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-      <div className="space-y-3">
-        <h3 className="text-lg font-bold font-display">Payment Method</h3>
-        <div className="p-4 rounded-xl border border-primary/50 bg-primary/10 flex items-center gap-3">
-          <CreditCard className="w-5 h-5 text-primary" />
-          <div className="flex-1">
-            <p className="font-bold text-sm text-white">Visa ending in 4242</p>
-            <p className="text-xs text-muted-foreground">Expires 12/25</p>
-          </div>
-          <div className="w-4 h-4 rounded-full bg-primary border border-primary flex items-center justify-center">
-            <div className="w-2 h-2 bg-black rounded-full" />
-          </div>
-        </div>
-        <div className="p-4 rounded-xl border border-white/10 bg-card flex items-center gap-3 opacity-50">
-          <span className="font-bold text-sm text-white px-2">PIX</span>
-          <div className="flex-1">
-            <p className="font-bold text-sm text-white">Instant Payment</p>
-          </div>
-          <div className="w-4 h-4 rounded-full border border-white/20" />
-        </div>
+        {selectedPaymentMethod === "pix" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-purple-600/20 to-purple-500/10 border border-purple-500/20 rounded-2xl p-4"
+          >
+            <p className="text-xs text-purple-300 mb-2">💜 PIX INSTANT TRANSFER</p>
+            <div className="space-y-2">
+              <p className="text-white font-semibold">Você será redirecionado para seu banco</p>
+              <p className="text-xs text-muted-foreground">Confirme o pagamento de ${bookingData?.total} com segurança</p>
+            </div>
+          </motion.div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderStep3 = () => (
     <div className="flex flex-col items-center justify-center h-[600px] text-center px-6">
