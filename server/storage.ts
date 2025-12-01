@@ -187,21 +187,44 @@ export class DatabaseStorage implements IStorage {
   async getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
     const allSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
     
+    // Get services and calculate total duration
     const serviceList = await Promise.all(serviceIds.map(id => this.getService(id)));
-    const totalDuration = serviceList.reduce((sum, s) => sum + (s?.duration || 0), 0);
+    const totalDuration = serviceList.reduce((sum, s) => sum + (s?.duration || 30), 0);
     
+    // Get booked appointments for this barber on the same date
     const bookedAppointments = await db.select().from(appointments)
-      .where(eq(appointments.barberId, barberId))
-      .where(or(eq(appointments.status, "confirmed"), eq(appointments.status, "pending")));
+      .where(eq(appointments.barberId, barberId));
     
-    const bookedSlots = new Set<string>();
-    bookedAppointments.forEach(appt => {
-      if (appt.date.toDateString() === new Date(date).toDateString()) {
-        bookedSlots.add(appt.time);
-      }
+    const appointmentsOnDate = bookedAppointments.filter(appt => 
+      appt.date.toDateString() === new Date(date).toDateString() &&
+      (appt.status === "confirmed" || appt.status === "pending")
+    );
+    
+    // Build time slots that are blocked by existing appointments
+    const blockedTimeRanges: Array<{ start: number; end: number }> = [];
+    
+    for (const appt of appointmentsOnDate) {
+      const apptServices = await Promise.all((appt.serviceIds || []).map(id => this.getService(id)));
+      const apptDuration = apptServices.reduce((sum, s) => sum + (s?.duration || 30), 0);
+      
+      const [apptHours, apptMinutes] = appt.time.split(":").map(Number);
+      const apptStartTime = apptHours * 60 + apptMinutes;
+      const apptEndTime = apptStartTime + apptDuration;
+      
+      blockedTimeRanges.push({ start: apptStartTime, end: apptEndTime });
+    }
+    
+    // Filter slots: return only those that don't conflict
+    return allSlots.filter(slot => {
+      const [hours, minutes] = slot.split(":").map(Number);
+      const slotStart = hours * 60 + minutes;
+      const slotEnd = slotStart + totalDuration;
+      
+      // Check if this slot conflicts with any blocked time range
+      return !blockedTimeRanges.some(range => 
+        slotStart < range.end && slotEnd > range.start
+      );
     });
-    
-    return allSlots.filter(slot => !bookedSlots.has(slot));
   }
 
   // Reviews

@@ -1,8 +1,16 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertBarberSchema, insertServiceSchema, insertCategorySchema, insertAppointmentSchema, insertReviewSchema, insertUserSchema } from "@shared/schema";
 import bcryptjs from "bcryptjs";
+
+declare global {
+  namespace Express {
+    interface Request {
+      session?: any;
+    }
+  }
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -257,6 +265,24 @@ export async function registerRoutes(
       });
 
       const appointment = await storage.createAppointment(data);
+      
+      // Create notification for client
+      try {
+        const client = await storage.getUser(clientId);
+        const barber = await storage.getBarber(barberId);
+        
+        if (client && barber) {
+          await storage.createNotification({
+            userId: clientId,
+            title: "Agendamento Confirmado",
+            message: `Seu agendamento com ${barber.name} está confirmado para ${new Date(date).toLocaleDateString("pt-BR")} às ${time}`,
+            type: "appointment",
+          });
+        }
+      } catch (notificationError) {
+        console.error("Failed to create notification:", notificationError);
+      }
+      
       res.status(201).json(appointment);
     } catch (error: any) {
       console.error("Appointment creation error:", error);
