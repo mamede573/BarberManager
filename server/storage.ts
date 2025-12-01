@@ -184,6 +184,13 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  private getDateInBrasiliaTimezone(date: Date): string {
+    // Convert date to Brasília timezone (UTC-3) and return YYYY-MM-DD
+    const offset = -3; // Brasília timezone is UTC-3 (no daylight saving consideration for simplicity)
+    const utcDate = new Date(date.getTime() + offset * 60 * 60 * 1000);
+    return utcDate.toISOString().split("T")[0];
+  }
+
   async getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
     const allSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
     
@@ -191,15 +198,15 @@ export class DatabaseStorage implements IStorage {
     const serviceList = await Promise.all(serviceIds.map(id => this.getService(id)));
     const totalDuration = serviceList.reduce((sum, s) => sum + (s?.duration || 30), 0);
     
-    // Get booked appointments for this barber on the same date
+    // Get booked appointments for this barber
     const bookedAppointments = await db.select().from(appointments)
       .where(eq(appointments.barberId, barberId));
     
-    // Convert dates to YYYY-MM-DD format for comparison (ignores time/timezone)
-    const targetDateStr = date.toISOString().split("T")[0];
+    // Convert target date to Brasília timezone for comparison
+    const targetDateStr = this.getDateInBrasiliaTimezone(date);
     
     const appointmentsOnDate = bookedAppointments.filter(appt => {
-      const apptDateStr = appt.date.toISOString().split("T")[0];
+      const apptDateStr = this.getDateInBrasiliaTimezone(appt.date);
       return apptDateStr === targetDateStr && (appt.status === "confirmed" || appt.status === "pending");
     });
     
