@@ -2,32 +2,25 @@ import React, { useState } from "react";
 import MobileShell from "@/components/MobileShell";
 import { ChevronLeft, Star, MapPin, Share2, Heart, Clock, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { getBarber, getServicesByBarber } from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { Service } from "@shared/schema";
+
+// Assets
+import cutImage from "@assets/generated_images/barber_cutting_hair_close_up.png";
 
 export default function BarberProfile() {
-  const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<number[]>([]);
 
-  const { data: barber, isLoading: loadingBarber } = useQuery({
-    queryKey: ["barber", params.id],
-    queryFn: () => getBarber(params.id!),
-    enabled: !!params.id,
-  });
+  const services = [
+    { id: 1, name: "Classic Haircut", duration: "45 min", price: 35 },
+    { id: 2, name: "Beard Trim & Shape", duration: "30 min", price: 25 },
+    { id: 3, name: "Hot Towel Shave", duration: "40 min", price: 40 },
+    { id: 4, name: "Hair & Beard Combo", duration: "75 min", price: 55 },
+  ];
 
-  const { data: services = [], isLoading: loadingServices } = useQuery({
-    queryKey: ["services", params.id],
-    queryFn: () => getServicesByBarber(params.id!),
-    enabled: !!params.id,
-  });
-
-  const toggleService = (id: string) => {
+  const toggleService = (id: number) => {
     if (selectedServices.includes(id)) {
       setSelectedServices(selectedServices.filter(s => s !== id));
     } else {
@@ -35,68 +28,29 @@ export default function BarberProfile() {
     }
   };
 
-  const selectedServicesList = services.filter(s => selectedServices.includes(s.id));
-  const total = selectedServicesList.reduce((acc, curr) => acc + parseFloat(curr.price), 0);
-
-  const handleBooking = () => {
-    const bookingData = {
-      barberId: params.id,
-      barberName: barber?.name,
-      services: selectedServicesList,
-      total: total.toFixed(2),
-    };
-    sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
-    setLocation("/booking");
-  };
-
-  if (loadingBarber) {
-    return (
-      <MobileShell hideNav>
-        <div className="h-[300px] w-full">
-          <Skeleton className="w-full h-full" />
-        </div>
-        <div className="px-6 pt-6 space-y-4">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </MobileShell>
-    );
-  }
-
-  if (!barber) {
-    return (
-      <MobileShell hideNav>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Barbeiro não encontrado</p>
-        </div>
-      </MobileShell>
-    );
-  }
+  const total = services
+    .filter(s => selectedServices.includes(s.id))
+    .reduce((acc, curr) => acc + curr.price, 0);
 
   return (
     <MobileShell hideNav>
       {/* Image Header */}
       <div className="relative h-[300px] w-full">
-        <img 
-          src={barber.avatar || `https://i.pravatar.cc/400?u=${barber.id}`} 
-          alt={barber.name} 
-          className="w-full h-full object-cover" 
-        />
+        <img src={cutImage} alt="Barber" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-background"></div>
         
         {/* Navbar Overlay */}
         <div className="absolute top-0 left-0 right-0 p-6 pt-12 flex justify-between items-center z-10">
           <Link href="/">
-            <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 cursor-pointer border border-white/10" data-testid="button-back">
+            <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 cursor-pointer border border-white/10">
               <ChevronLeft className="w-6 h-6" />
             </div>
           </Link>
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 cursor-pointer border border-white/10" data-testid="button-favorite">
+            <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 cursor-pointer border border-white/10">
               <Heart className="w-5 h-5" />
             </div>
-            <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 cursor-pointer border border-white/10" data-testid="button-share">
+            <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 cursor-pointer border border-white/10">
               <Share2 className="w-5 h-5" />
             </div>
           </div>
@@ -106,21 +60,21 @@ export default function BarberProfile() {
         <div className="absolute bottom-0 left-0 right-0 p-6 pb-8">
           <div className="flex justify-between items-end">
             <div>
-              <h1 className="text-3xl font-display font-bold text-white mb-2" data-testid="text-barber-name">{barber.name}</h1>
+              <h1 className="text-3xl font-display font-bold text-white mb-2">Jack 'The Clipper'</h1>
               <div className="flex items-center gap-4 text-gray-300 text-sm">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-primary fill-primary" />
-                  <span className="text-white font-bold">{barber.rating}</span>
-                  <span>({barber.reviewCount} avaliações)</span>
+                  <span className="text-white font-bold">4.9</span>
+                  <span>(128 reviews)</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  <span>{barber.distance} de distância</span>
+                  <span>0.8km away</span>
                 </div>
               </div>
             </div>
             <div className="w-14 h-14 rounded-full border-2 border-primary overflow-hidden bg-black">
-               <img src={barber.avatar || `https://i.pravatar.cc/150?u=${barber.id}`} className="w-full h-full object-cover" />
+               <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -133,85 +87,57 @@ export default function BarberProfile() {
         <div className="space-y-8">
           {/* About */}
           <section>
-            <h3 className="text-lg font-bold font-display mb-2">Sobre</h3>
+            <h3 className="text-lg font-bold font-display mb-2">About</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {barber.bio || "Sem descrição disponível."}
+              Master barber with over 10 years of experience specializing in classic cuts and straight razor shaves. 
+              I believe every haircut is a work of art. Complimentary whiskey with every service.
             </p>
           </section>
 
           {/* Services */}
           <section>
-            <h3 className="text-lg font-bold font-display mb-4">Serviços</h3>
-            <div className="grid grid-cols-1 gap-4">
-              {loadingServices ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl border border-white/5 bg-card overflow-hidden">
-                    <Skeleton className="w-full h-48" />
-                    <div className="p-4 space-y-2">
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-3 w-1/4" />
+            <h3 className="text-lg font-bold font-display mb-4">Services</h3>
+            <div className="space-y-3">
+              {services.map((service) => {
+                const isSelected = selectedServices.includes(service.id);
+                return (
+                  <div 
+                    key={service.id}
+                    onClick={() => toggleService(service.id)}
+                    className={cn(
+                      "p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group",
+                      isSelected 
+                        ? "bg-primary/10 border-primary/50" 
+                        : "bg-card border-white/5 hover:border-white/10"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                        isSelected ? "bg-primary text-black" : "bg-secondary text-muted-foreground"
+                      )}>
+                        <Scissors className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className={cn("font-bold", isSelected ? "text-primary" : "text-foreground")}>{service.name}</h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                          <Clock className="w-3 h-3" />
+                          <span>{service.duration}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold font-display text-lg">${service.price}</span>
+                      <div className={cn(
+                        "w-6 h-6 rounded-full border flex items-center justify-center transition-all",
+                        isSelected ? "bg-primary border-primary" : "border-white/20"
+                      )}>
+                        {isSelected && <div className="w-2 h-2 bg-black rounded-full" />}
+                      </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                services.map((service) => {
-                  const isSelected = selectedServices.includes(service.id);
-                  return (
-                    <motion.div 
-                      key={service.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => toggleService(service.id)}
-                      className={cn(
-                        "rounded-2xl border-2 overflow-hidden transition-all cursor-pointer",
-                        isSelected 
-                          ? "border-primary bg-primary/10 shadow-lg shadow-primary/20" 
-                          : "border-white/5 bg-card hover:border-white/10"
-                      )}
-                      data-testid={`service-${service.id}`}
-                    >
-                      <div className="relative h-48 overflow-hidden bg-secondary">
-                        {service.image ? (
-                          <img 
-                            src={service.image} 
-                            alt={service.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Scissors className="w-12 h-12 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                        
-                        {isSelected && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute top-3 right-3 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/50"
-                          >
-                            <div className="w-2 h-2 bg-black rounded-full" />
-                          </motion.div>
-                        )}
-                      </div>
-                      
-                      <div className="p-4 pb-3 flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className={cn("font-bold font-display", isSelected ? "text-primary" : "text-foreground")}>{service.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
-                            <Clock className="w-3 h-3" />
-                            <span>{service.duration} min</span>
-                          </div>
-                        </div>
-                        <div className="text-right ml-3">
-                          <span className="font-bold font-display text-lg text-primary">R$ {parseFloat(service.price).toFixed(0)}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
+                );
+              })}
             </div>
           </section>
         </div>
@@ -228,16 +154,15 @@ export default function BarberProfile() {
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs text-muted-foreground mb-0.5">{selectedServices.length} serviço(s) selecionado(s)</p>
-                <p className="text-2xl font-bold font-display text-white" data-testid="text-total-price">R$ {total.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">{selectedServices.length} services selected</p>
+                <p className="text-2xl font-bold font-display text-white">${total}.00</p>
               </div>
               <Button 
                 size="lg" 
                 className="bg-primary text-black hover:bg-primary/90 font-bold rounded-xl px-8"
-                onClick={handleBooking}
-                data-testid="button-book-appointment"
+                onClick={() => setLocation("/booking")}
               >
-                Agendar
+                Book Appointment
               </Button>
             </div>
           </motion.div>

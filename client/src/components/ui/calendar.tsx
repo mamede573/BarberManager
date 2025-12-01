@@ -6,25 +6,10 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react"
-import { DayButton, DayPicker, getDefaultClassNames, type Locale } from "react-day-picker"
+import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-
-// Portuguese locale for react-day-picker
-const ptBR: Locale = {
-  localize: {
-    month: (n) => ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][n],
-    day: (n) => ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][n],
-    ordinalNumber: (n) => String(n),
-  },
-  formatters: {
-    formatMonthCaption: (date) => date.toLocaleString("pt-BR", { month: "long", year: "numeric" }),
-  },
-  options: {
-    weekStartsOn: 0,
-  },
-}
 
 function Calendar({
   className,
@@ -50,10 +35,9 @@ function Calendar({
         className
       )}
       captionLayout={captionLayout}
-      locale={ptBR}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("pt-BR", { month: "short" }),
+          date.toLocaleString("default", { month: "short" }),
         ...formatters,
       }}
       classNames={{
