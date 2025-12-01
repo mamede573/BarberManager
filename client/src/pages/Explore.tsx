@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import interiorImage from "@assets/generated_images/dark_modern_barber_shop_interior_vertical.png";
+import hipsterBarberImage from "@assets/generated_images/hipster_barber_with_beard_and_tattoos.png";
+import classicBarberImage from "@assets/generated_images/classic_older_barber_professional.png";
+import cutImage from "@assets/generated_images/barber_cutting_hair_close_up.png";
 
 export default function Explore() {
   const [view, setView] = React.useState<"list" | "map">("list");
@@ -15,7 +18,7 @@ export default function Explore() {
       name: "Jack 'The Clipper'",
       rating: 4.9,
       reviews: 128,
-      image: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&auto=format&fit=crop&q=60",
+      image: cutImage,
       location: "Downtown, 0.8km",
       price: "$$",
       tags: ["Beard", "Fade"]
@@ -32,6 +35,26 @@ export default function Explore() {
     },
     {
       id: 3,
+      name: "Iron & Ink",
+      rating: 4.9,
+      reviews: 215,
+      image: hipsterBarberImage,
+      location: "Arts District, 1.2km",
+      price: "$$",
+      tags: ["Modern", "Tattoo"]
+    },
+    {
+      id: 4,
+      name: "Classic Cuts",
+      rating: 5.0,
+      reviews: 340,
+      image: classicBarberImage,
+      location: "Old Town, 3.5km",
+      price: "$$$",
+      tags: ["Classic", "Shave"]
+    },
+    {
+      id: 5,
       name: "Razor Sharp",
       rating: 4.6,
       reviews: 45,
@@ -41,7 +64,7 @@ export default function Explore() {
       tags: ["Classic", "Quick"]
     },
     {
-      id: 4,
+      id: 6,
       name: "The Fade Factory",
       rating: 4.7,
       reviews: 210,

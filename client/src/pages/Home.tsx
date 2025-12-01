@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 import logoImage from "@assets/generated_images/minimalist_barber_shop_logo_gold_on_black.png";
 import interiorImage from "@assets/generated_images/dark_modern_barber_shop_interior_vertical.png";
 import cutImage from "@assets/generated_images/barber_cutting_hair_close_up.png";
+import hipsterBarberImage from "@assets/generated_images/hipster_barber_with_beard_and_tattoos.png";
+import classicBarberImage from "@assets/generated_images/classic_older_barber_professional.png";
 
 export default function Home() {
   const categories = [
@@ -16,6 +18,8 @@ export default function Home() {
     { id: 2, name: "Beard", icon: "🧔" },
     { id: 3, name: "Shave", icon: "🪒" },
     { id: 4, name: "Facial", icon: "🧖" },
+    { id: 5, name: "Color", icon: "🎨" },
+    { id: 6, name: "Kids", icon: "👶" },
   ];
 
   const topBarbers = [
@@ -34,6 +38,22 @@ export default function Home() {
       reviews: 94,
       image: interiorImage,
       location: "West End, 2.1km",
+    },
+    {
+      id: 3,
+      name: "Iron & Ink",
+      rating: 4.9,
+      reviews: 215,
+      image: hipsterBarberImage,
+      location: "Arts District, 1.2km",
+    },
+    {
+      id: 4,
+      name: "Classic Cuts",
+      rating: 5.0,
+      reviews: 340,
+      image: classicBarberImage,
+      location: "Old Town, 3.5km",
     },
   ];
 

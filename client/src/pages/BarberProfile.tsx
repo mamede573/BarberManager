@@ -18,6 +18,9 @@ export default function BarberProfile() {
     { id: 2, name: "Beard Trim & Shape", duration: "30 min", price: 25 },
     { id: 3, name: "Hot Towel Shave", duration: "40 min", price: 40 },
     { id: 4, name: "Hair & Beard Combo", duration: "75 min", price: 55 },
+    { id: 5, name: "Kids Haircut", duration: "30 min", price: 25 },
+    { id: 6, name: "Hair Color / Dye", duration: "90 min", price: 80 },
+    { id: 7, name: "Facial Treatment", duration: "45 min", price: 50 },
   ];
 
   const toggleService = (id: number) => {
