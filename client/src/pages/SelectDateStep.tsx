@@ -1,28 +1,68 @@
 import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { Calendar } from "@/components/ui/calendar";
+import { useQuery } from "@tanstack/react-query";
+import { getAvailableSlots } from "@/lib/api";
 
 export default function SelectDateStep() {
   const [, setLocation] = useLocation();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [barberId, setBarberId] = useState<string | null>(null);
+  const [serviceId, setServiceId] = useState<string | null>(null);
+  const [disabledDates, setDisabledDates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const id = sessionStorage.getItem("selectedBarberId");
-    if (!id) {
-      setLocation("/booking-step-2-service");
+    const sid = sessionStorage.getItem("selectedServiceId");
+    if (!id || !sid) {
+      setLocation("/booking-step-2-barber");
       return;
     }
     setBarberId(id);
+    setServiceId(sid);
   }, []);
+
+  // Check availability for dates to disable those without slots
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (!barberId || !serviceId) return;
+      
+      const disabled = new Set<string>();
+      const today = new Date();
+      
+      // Check next 30 days
+      for (let i = 0; i < 30; i++) {
+        const checkDate = new Date(today);
+        checkDate.setDate(checkDate.getDate() + i);
+        const dateStr = checkDate.toISOString().split("T")[0];
+        
+        try {
+          const slots = await getAvailableSlots(barberId, dateStr, [serviceId]);
+          if (!slots || slots.length === 0) {
+            disabled.add(dateStr);
+          }
+        } catch (error) {
+          disabled.add(dateStr);
+        }
+      }
+      
+      setDisabledDates(disabled);
+    };
+    
+    checkAvailability();
+  }, [barberId, serviceId]);
 
   const handleNext = () => {
     if (!date) return;
+    const dateStr = date.toISOString().split("T")[0];
+    if (disabledDates.has(dateStr)) {
+      return; // Don't allow selecting disabled dates
+    }
     sessionStorage.setItem("bookingStep", "4");
-    sessionStorage.setItem("selectedDate", date.toISOString().split("T")[0]);
+    sessionStorage.setItem("selectedDate", dateStr);
     setLocation("/booking-step-4-time");
   };
 
@@ -55,16 +95,39 @@ export default function SelectDateStep() {
           <Calendar
             mode="single"
             selected={date}
-            onSelect={setDate}
+            onSelect={(selectedDate) => {
+              if (selectedDate) {
+                const dateStr = selectedDate.toISOString().split("T")[0];
+                if (!disabledDates.has(dateStr)) {
+                  setDate(selectedDate);
+                }
+              }
+            }}
             className="w-full text-white [&_.rdp]:w-full [&_.rdp-caption]:text-lg [&_.rdp-cell]:p-0 [&_.rdp-day]:rounded-xl [&_.rdp-day_button]:rounded-xl [&_.rdp-day_button]:p-2.5"
-            disabled={(d) => d < new Date() || d < new Date(new Date().setHours(0, 0, 0, 0))}
+            disabled={(d) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              if (d < today) return true;
+              const dateStr = d.toISOString().split("T")[0];
+              return disabledDates.has(dateStr);
+            }}
           />
         </div>
+
+        {date && disabledDates.has(date.toISOString().split("T")[0]) && (
+          <div className="mt-6 flex items-start gap-3 p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/30">
+            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-yellow-500">Sem vagas neste dia</p>
+              <p className="text-xs text-yellow-400/70 mt-1">Todos os horários deste barbeiro estão ocupados. Escolha outra data.</p>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8 flex gap-3">
           <Button
             onClick={handleNext}
-            disabled={!date}
+            disabled={!date || disabledDates.has(date.toISOString().split("T")[0])}
             className="flex-1 bg-primary text-black hover:bg-primary/90 font-bold"
             data-testid="button-next-time"
           >

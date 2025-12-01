@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Clock } from "lucide-react";
+import { ChevronLeft, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -95,10 +95,30 @@ export default function SelectTimeStep() {
             ))
           ) : (
             <div className="col-span-4 text-center py-8">
-              <p className="text-muted-foreground text-sm">Nenhum horário disponível para esta data</p>
+              <div className="flex flex-col items-center gap-3">
+                <AlertCircle className="w-10 h-10 text-yellow-500" />
+                <p className="text-muted-foreground text-sm">Sem vagas neste dia para este barbeiro</p>
+              </div>
             </div>
           )}
         </div>
+
+        {availableSlots.length === 0 && !isLoading && (
+          <div className="flex flex-col gap-3 mb-8">
+            <Link href="/booking-step-2-barber">
+              <Button 
+                onClick={() => {
+                  sessionStorage.removeItem("selectedBarberId");
+                }}
+                variant="outline"
+                className="w-full text-sm border-white/20 hover:bg-white/5"
+                data-testid="button-change-barber"
+              >
+                Escolher outro barbeiro
+              </Button>
+            </Link>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <Button
