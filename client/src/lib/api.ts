@@ -1,6 +1,24 @@
-import type { Barber, Category, Service, Appointment } from "@shared/schema";
+import type { Barber, Category, Service, Appointment, User } from "@shared/schema";
 
 const API_BASE = "/api";
+
+// Auth
+export async function signup(data: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<User> {
+  const res = await fetch(`${API_BASE}/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to create account");
+  }
+  return res.json();
+}
 
 // Categories
 export async function getCategories(): Promise<Category[]> {

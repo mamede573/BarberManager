@@ -11,11 +11,13 @@ import Explore from "@/pages/Explore";
 import Bookings from "@/pages/Bookings";
 import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route path="/" component={Home} />
       <Route path="/explore" component={Explore} />
       <Route path="/barber/:id" component={BarberProfile} />

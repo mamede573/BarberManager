@@ -2,12 +2,48 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertBarberSchema, insertServiceSchema, insertCategorySchema, insertAppointmentSchema, insertReviewSchema, insertUserSchema } from "@shared/schema";
+import bcryptjs from "bcryptjs";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
+  // ============ AUTH ============
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
+      
+      // Validate input
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: "Name, email and password are required" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcryptjs.hash(password, 10);
+      
+      // Create user
+      const user = await storage.createUser({
+        name,
+        email,
+        password: hashedPassword,
+      });
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      res.status(500).json({ message: error.message || "Failed to create account" });
+    }
+  });
+
   // ============ CATEGORIES ============
   app.get("/api/categories", async (_req, res) => {
     try {
