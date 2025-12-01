@@ -41,11 +41,17 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     setIsLoading(true);
     try {
-      await updateUser({
+      const updateData: any = {
         name: editFormData.name,
         phone: editFormData.phone,
-        avatar: editFormData.avatar,
-      });
+      };
+
+      // Only include avatar if it changed (not null/undefined and not the default)
+      if (editFormData.avatar && editFormData.avatar !== user?.avatar) {
+        updateData.avatar = editFormData.avatar;
+      }
+
+      await updateUser(updateData);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
