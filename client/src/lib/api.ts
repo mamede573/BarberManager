@@ -58,7 +58,7 @@ export async function createAppointment(data: {
   clientId: string;
   barberId: string;
   serviceIds: string[];
-  date: Date;
+  date: string;
   time: string;
   totalPrice: string;
   paymentMethod?: string;

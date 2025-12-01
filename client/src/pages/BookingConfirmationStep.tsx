@@ -80,18 +80,11 @@ export default function BookingConfirmationStep() {
       return;
     }
 
-    // The 'date' variable is a Date object from the calendar.
-    // Since JavaScript interprets new Date("YYYY-MM-DD") as UTC midnight,
-    // We need to add 3 hours to represent 00:00 in Brasília timezone
-    // "YYYY-MM-DD" (Brasília local time) = "YYYY-MM-DD 03:00 UTC"
-    const dateObj = new Date(date);
-    dateObj.setUTCHours(dateObj.getUTCHours() + 3, 0, 0, 0);
-
     createAppointmentMutation.mutate({
       clientId: user.id,
       barberId: barberId,
       serviceIds: [serviceId],
-      date: dateObj,
+      date: date,
       time: time,
       totalPrice: servicePrice,
       paymentMethod: paymentMethod === "pix" ? "pix" : "cash",

@@ -252,8 +252,9 @@ export async function registerRoutes(
       // Ensure serviceIds is an array
       const serviceIdsArray = Array.isArray(serviceIds) ? serviceIds : [serviceIds];
       
-      // Validate availability before creating appointment
-      const dateObj = new Date(date);
+      // Convert date string (YYYY-MM-DD) to Date object representing 00:00 UTC
+      // This ensures consistent comparison in getDateInBrasiliaTimezone
+      const dateObj = new Date(date + "T00:00:00Z");
       const availableSlots = await storage.getAvailableSlots(barberId, dateObj, serviceIdsArray);
       
       if (!availableSlots.includes(time)) {
@@ -353,7 +354,8 @@ export async function registerRoutes(
       if (!date || !serviceIds) {
         return res.status(400).json({ message: "Date and serviceIds are required" });
       }
-      const slots = await storage.getAvailableSlots(req.params.barberId, new Date(date), serviceIds);
+      const dateObj = new Date(date + "T00:00:00Z");
+      const slots = await storage.getAvailableSlots(req.params.barberId, dateObj, serviceIds);
       res.json(slots);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch available slots" });
