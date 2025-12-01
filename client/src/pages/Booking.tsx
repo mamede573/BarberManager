@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, CreditCard, Wallet, Smartphone, ArrowRight } from "lucide-react";
+import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,7 +17,7 @@ interface BookingData {
   total: string;
 }
 
-type PaymentMethod = "card" | "pix" | "apple" | "google";
+type PaymentMethod = "local";
 
 export default function Booking() {
   const [, setLocation] = useLocation();
@@ -25,7 +25,7 @@ export default function Booking() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("card");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("local");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("bookingData");
@@ -61,7 +61,7 @@ export default function Booking() {
       date: date,
       time: selectedTime,
       totalPrice: bookingData.total,
-      paymentMethod: "card",
+      paymentMethod: "local",
     });
   };
 
@@ -125,10 +125,7 @@ export default function Booking() {
 
   const renderStep2 = () => {
     const paymentMethods = [
-      { id: "card" as const, name: "Cartão de Crédito", desc: "Visa, Mastercard", icon: CreditCard, color: "from-blue-600 to-blue-500" },
-      { id: "pix" as const, name: "PIX", desc: "Transferência instantânea", icon: Smartphone, color: "from-purple-600 to-purple-500" },
-      { id: "apple" as const, name: "Apple Pay", desc: "Rápido e seguro", icon: Wallet, color: "from-gray-800 to-gray-700" },
-      { id: "google" as const, name: "Google Pay", desc: "Pagamento em um toque", icon: Wallet, color: "from-red-600 to-yellow-500" },
+      { id: "local" as const, name: "PAGAMENTO NO LOCAL", desc: "Pague na barbearia", icon: MapPin, color: "from-amber-600 to-amber-500" },
     ];
 
     return (
@@ -241,34 +238,17 @@ export default function Booking() {
           </div>
         </div>
 
-        {/* Card Details */}
-        {selectedPaymentMethod === "card" && (
+        {/* Payment Instructions */}
+        {selectedPaymentMethod === "local" && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-blue-600/20 to-blue-500/10 border border-blue-500/20 rounded-2xl p-4"
+            className="bg-gradient-to-br from-amber-600/20 to-amber-500/10 border border-amber-500/20 rounded-2xl p-4"
           >
-            <p className="text-xs text-blue-300 mb-2">💳 CARD DETAILS</p>
+            <p className="text-xs text-amber-300 mb-2">💰 PAGAMENTO NO LOCAL</p>
             <div className="space-y-2">
-              <div className="font-mono text-white font-bold tracking-wider">•••• •••• •••• 4242</div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Cardholder: Michael A.</span>
-                <span>Expires: 12/25</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {selectedPaymentMethod === "pix" && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-purple-600/20 to-purple-500/10 border border-purple-500/20 rounded-2xl p-4"
-          >
-            <p className="text-xs text-purple-300 mb-2">💜 PIX INSTANT TRANSFER</p>
-            <div className="space-y-2">
-              <p className="text-white font-semibold">Você será redirecionado para seu banco</p>
-              <p className="text-xs text-muted-foreground">Confirme o pagamento de ${bookingData?.total} com segurança</p>
+              <p className="text-white font-semibold">Você pode pagar diretamente na barbearia</p>
+              <p className="text-xs text-muted-foreground">Valor total: R$ {bookingData?.total}</p>
             </div>
           </motion.div>
         )}
