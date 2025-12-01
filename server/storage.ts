@@ -191,6 +191,29 @@ export class DatabaseStorage implements IStorage {
     return utcDate.toISOString().split("T")[0];
   }
 
+  async checkTimeConflict(barberId: string, date: Date, time: string): Promise<{ hasConflict: boolean; reason?: string }> {
+    const bookedAppointments = await db.select().from(appointments)
+      .where(eq(appointments.barberId, barberId));
+    
+    const targetDateStr = this.getDateInBrasiliaTimezone(date);
+    
+    for (const appt of bookedAppointments) {
+      if (!appt.date || !appt.time) continue;
+      const apptDateStr = this.getDateInBrasiliaTimezone(appt.date);
+      
+      if (apptDateStr === targetDateStr && (appt.status === "confirmed" || appt.status === "pending")) {
+        if (appt.time === time) {
+          return { 
+            hasConflict: true, 
+            reason: "Este horário já está ocupado com este barbeiro nesta data" 
+          };
+        }
+      }
+    }
+    
+    return { hasConflict: false };
+  }
+
   async getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
     const allSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
     

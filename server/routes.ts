@@ -255,10 +255,17 @@ export async function registerRoutes(
       // Convert date string (YYYY-MM-DD) to Date object representing 00:00 UTC
       // This ensures consistent comparison in getDateInBrasiliaTimezone
       const dateObj = new Date(date + "T00:00:00Z");
+      
+      // Check for exact time conflict
+      const conflict = await storage.checkTimeConflict(barberId, dateObj, time);
+      if (conflict.hasConflict) {
+        return res.status(409).json({ message: conflict.reason || "Este horário não está disponível" });
+      }
+      
       const availableSlots = await storage.getAvailableSlots(barberId, dateObj, serviceIdsArray);
       
       if (!availableSlots.includes(time)) {
-        return res.status(409).json({ message: "This time slot is not available for this barber" });
+        return res.status(409).json({ message: "Este horário não está disponível para este barbeiro. Duração do serviço ultrapassa o horário." });
       }
 
       const data = insertAppointmentSchema.parse({
