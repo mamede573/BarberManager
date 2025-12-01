@@ -44,7 +44,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     // In a real app, this would clear auth state
-    setLocation("/");
+    setLocation("/login");
   };
 
   const menuItems = [
