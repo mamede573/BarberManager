@@ -2,7 +2,7 @@ import React from "react";
 import MobileShell from "@/components/MobileShell";
 import { Bell, Search, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getServices } from "@/lib/api";
@@ -14,6 +14,7 @@ import interiorImage from "@assets/generated_images/dark_modern_barber_shop_inte
 
 export default function Home() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const { data: services = [], isLoading: loadingServices } = useQuery({
     queryKey: ["services"],
     queryFn: getServices,
@@ -91,6 +92,7 @@ export default function Home() {
                   key={service.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={() => setLocation(`/barber/${service.barberId}`)}
                   className="rounded-2xl border border-white/10 bg-card overflow-hidden hover:border-primary/30 transition-all cursor-pointer group"
                   data-testid={`service-card-${service.id}`}
                 >
