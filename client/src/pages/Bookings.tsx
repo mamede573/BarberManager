@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cancelAppointment, rescheduleAppointment, getAvailableSlots, getAppointmentsByClient } from "@/lib/api";
+import { cancelAppointment, rescheduleAppointment, getAvailableSlots, getAppointmentsByClient, getServices } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
@@ -17,12 +17,11 @@ interface BookingItem {
   barberName?: string;
   date: Date;
   time: string;
-  services: string[];
+  serviceIds: string[];
   totalPrice: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   paymentStatus: "pending" | "paid" | "refunded";
   rating?: number;
-  serviceIds?: string[];
 }
 
 const getStatusColor = (status: string) => {
@@ -250,11 +249,15 @@ export default function Bookings() {
                     <div className="pt-2">
                       <p className="text-xs text-muted-foreground mb-2">Serviços:</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {booking.services.map((service) => (
-                          <span key={service} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-lg border border-primary/20">
-                            {service}
-                          </span>
-                        ))}
+                        {booking.serviceIds && Array.isArray(booking.serviceIds) ? (
+                          booking.serviceIds.map((serviceId) => (
+                            <span key={serviceId} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-lg border border-primary/20">
+                              {serviceId}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sem serviços</span>
+                        )}
                       </div>
                     </div>
                   </div>
