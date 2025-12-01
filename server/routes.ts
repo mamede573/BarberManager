@@ -357,7 +357,8 @@ export async function registerRoutes(
       const dateObj = new Date(date + "T00:00:00Z");
       const slots = await storage.getAvailableSlots(req.params.barberId, dateObj, serviceIds);
       res.json(slots);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Available slots error:", error);
       res.status(500).json({ message: "Failed to fetch available slots" });
     }
   });
