@@ -60,13 +60,13 @@ export default function BookingConfirmationStep() {
     onSuccess: () => {
       setIsConfirmed(true);
       toast.success("Agendamento confirmado com sucesso!");
+      sessionStorage.removeItem("selectedServiceId");
+      sessionStorage.removeItem("selectedBarberId");
+      sessionStorage.removeItem("selectedDate");
+      sessionStorage.removeItem("selectedTime");
       setTimeout(() => {
-        sessionStorage.removeItem("selectedServiceId");
-        sessionStorage.removeItem("selectedBarberId");
-        sessionStorage.removeItem("selectedDate");
-        sessionStorage.removeItem("selectedTime");
         setLocation("/bookings");
-      }, 2000);
+      }, 1500);
     },
     onError: (error: any) => {
       console.error("Failed to create appointment:", error);

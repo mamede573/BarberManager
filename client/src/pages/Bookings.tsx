@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cancelAppointment, rescheduleAppointment, getAvailableSlots, getAppointmentsByClient, getServices } from "@/lib/api";
+import { cancelAppointment, rescheduleAppointment, getAvailableSlots, getAppointmentsByClient } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
@@ -74,7 +74,7 @@ export default function Bookings() {
   const [availableSlots, setAvailableSlots] = useState<string[]>(timeSlots);
   const queryClient = useQueryClient();
 
-  const { data: appointments = [], isLoading, error } = useQuery({
+  const { data: appointments = [], isLoading, error, refetch } = useQuery({
     queryKey: ["appointments", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -87,7 +87,15 @@ export default function Bookings() {
       }));
     },
     enabled: !!user?.id,
+    staleTime: 0,
+    refetchOnMount: true,
   });
+
+  useEffect(() => {
+    if (user?.id) {
+      refetch();
+    }
+  }, [user?.id, refetch]);
 
   const cancelMutation = useMutation({
     mutationFn: (appointmentId: string) => cancelAppointment(appointmentId),
