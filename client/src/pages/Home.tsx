@@ -1,20 +1,21 @@
 import React from "react";
 import MobileShell from "@/components/MobileShell";
-import { Bell, Search, Star, MapPin, ArrowRight } from "lucide-react";
+import { Bell, Search, Star, MapPin, ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { getBarbers, getCategories } from "@/lib/api";
+import { getBarbers, getServices } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 // Fallback images
 import interiorImage from "@assets/generated_images/dark_modern_barber_shop_interior_vertical.png";
 
 export default function Home() {
-  const { data: categories = [], isLoading: loadingCategories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
+  const { data: services = [], isLoading: loadingServices } = useQuery({
+    queryKey: ["services"],
+    queryFn: getServices,
   });
 
   const { data: barbers = [], isLoading: loadingBarbers } = useQuery({
@@ -70,28 +71,61 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Categories */}
-        <div className="pl-6">
-          <div className="flex items-center justify-between pr-6 mb-4">
-            <h3 className="text-lg font-bold font-display">Serviços</h3>
-            <span className="text-xs text-primary cursor-pointer">Ver tudo</span>
+        {/* Featured Services */}
+        <div className="px-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold font-display">Serviços em Destaque</h3>
+            <Link href="/explore">
+              <span className="text-xs text-primary cursor-pointer">Ver Todos</span>
+            </Link>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-4 pr-6 hide-scrollbar">
-            {loadingCategories ? (
+          
+          <div className="grid grid-cols-2 gap-3">
+            {loadingServices ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-28 rounded-full" />
+                <div key={i} className="rounded-2xl border border-white/5 bg-card overflow-hidden">
+                  <Skeleton className="w-full h-32" />
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
               ))
             ) : (
-              categories.map((cat) => (
-                <motion.button
-                  key={cat.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 text-primary hover:from-primary/30 hover:to-primary/20 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20"
-                  data-testid={`category-${cat.id}`}
+              services.slice(0, 4).map((service) => (
+                <motion.div 
+                  key={service.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="rounded-2xl border border-white/10 bg-card overflow-hidden hover:border-primary/30 transition-all cursor-pointer group"
+                  data-testid={`service-card-${service.id}`}
                 >
-                  {cat.name}
-                </motion.button>
+                  <div className="relative h-32 overflow-hidden bg-secondary">
+                    {service.image ? (
+                      <img 
+                        src={service.image} 
+                        alt={service.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10">
+                        <span className="text-3xl">✂️</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  </div>
+                  
+                  <div className="p-3">
+                    <h4 className="font-bold text-sm text-white truncate" data-testid={`service-name-${service.id}`}>{service.name}</h4>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        <span>{service.duration}m</span>
+                      </div>
+                      <span className="font-bold text-sm text-primary" data-testid={`service-price-${service.id}`}>R$ {parseFloat(service.price).toFixed(0)}</span>
+                    </div>
+                  </div>
+                </motion.div>
               ))
             )}
           </div>

@@ -23,6 +23,12 @@ export async function getBarber(id: string): Promise<Barber> {
 }
 
 // Services
+export async function getServices(): Promise<Service[]> {
+  const res = await fetch(`${API_BASE}/services`);
+  if (!res.ok) throw new Error("Failed to fetch services");
+  return res.json();
+}
+
 export async function getServicesByBarber(barberId: string): Promise<Service[]> {
   const res = await fetch(`${API_BASE}/barbers/${barberId}/services`);
   if (!res.ok) throw new Error("Failed to fetch services");
