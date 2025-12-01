@@ -251,12 +251,20 @@ export async function registerRoutes(
 
       // Ensure serviceIds is an array
       const serviceIdsArray = Array.isArray(serviceIds) ? serviceIds : [serviceIds];
+      
+      // Validate availability before creating appointment
+      const dateObj = new Date(date);
+      const availableSlots = await storage.getAvailableSlots(barberId, dateObj, serviceIdsArray);
+      
+      if (!availableSlots.includes(time)) {
+        return res.status(409).json({ message: "This time slot is not available for this barber" });
+      }
 
       const data = insertAppointmentSchema.parse({
         clientId,
         barberId,
         serviceIds: serviceIdsArray,
-        date: new Date(date),
+        date: dateObj,
         time,
         totalPrice: String(totalPrice),
         paymentMethod: paymentMethod || "cash",
@@ -275,7 +283,7 @@ export async function registerRoutes(
           await storage.createNotification({
             userId: clientId,
             title: "Agendamento Confirmado",
-            message: `Seu agendamento com ${barber.name} está confirmado para ${new Date(date).toLocaleDateString("pt-BR")} às ${time}`,
+            message: `Seu agendamento com ${barber.name} está confirmado para ${dateObj.toLocaleDateString("pt-BR")} às ${time}`,
             type: "appointment",
           });
         }

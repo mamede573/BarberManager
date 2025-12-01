@@ -106,11 +106,11 @@ export async function rescheduleAppointment(appointmentId: string, data: {
   return res.json();
 }
 
-export async function getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
+export async function getAvailableSlots(barberId: string, date: string, serviceIds: string[]): Promise<string[]> {
   const res = await fetch(`${API_BASE}/barbers/${barberId}/available-slots`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ date, serviceIds }),
+    body: JSON.stringify({ date: new Date(date), serviceIds }),
   });
   if (!res.ok) throw new Error("Failed to fetch available slots");
   return res.json();

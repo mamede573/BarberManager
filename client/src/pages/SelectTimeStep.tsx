@@ -5,25 +5,40 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getAvailableSlots } from "@/lib/api";
 
 export default function SelectTimeStep() {
   const [, setLocation] = useLocation();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
+  const [barberId, setBarberId] = useState<string | null>(null);
+  const [serviceId, setServiceId] = useState<string | null>(null);
 
   useEffect(() => {
     const d = sessionStorage.getItem("selectedDate");
-    if (!d) {
-      setLocation("/booking-step-4-date");
+    const bid = sessionStorage.getItem("selectedBarberId");
+    const sid = sessionStorage.getItem("selectedServiceId");
+    
+    if (!d || !bid || !sid) {
+      setLocation("/booking-step-3-date");
       return;
     }
     setDate(d);
+    setBarberId(bid);
+    setServiceId(sid);
   }, []);
 
-  const timeSlots = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
-  ];
+  const { data: availableSlots = [], isLoading } = useQuery({
+    queryKey: ["available-slots", barberId, date, serviceId],
+    queryFn: async () => {
+      if (!barberId || !date || !serviceId) return [];
+      const slots = await getAvailableSlots(barberId, String(date), [serviceId]);
+      return slots || [];
+    },
+    enabled: !!barberId && !!date && !!serviceId,
+  });
 
   const handleNext = () => {
     if (!selectedTime) return;
@@ -55,24 +70,34 @@ export default function SelectTimeStep() {
         </div>
 
         <div className="grid grid-cols-4 gap-2 mb-8">
-          {timeSlots.map((time, idx) => (
-            <motion.button
-              key={time}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              onClick={() => setSelectedTime(time)}
-              className={cn(
-                "py-3 px-2 rounded-xl text-xs font-bold border-2 transition-all",
-                selectedTime === time
-                  ? "bg-primary text-black border-primary shadow-lg shadow-primary/50 scale-105"
-                  : "bg-secondary/40 text-muted-foreground border-white/10 hover:border-primary/50 hover:bg-secondary/60"
-              )}
-              data-testid={`time-slot-${time.replace(/:/g, "-")}`}
-            >
-              {time}
-            </motion.button>
-          ))}
+          {isLoading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-xl" />
+            ))
+          ) : availableSlots.length > 0 ? (
+            availableSlots.map((time, idx) => (
+              <motion.button
+                key={time}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                onClick={() => setSelectedTime(time)}
+                className={cn(
+                  "py-3 px-2 rounded-xl text-xs font-bold border-2 transition-all",
+                  selectedTime === time
+                    ? "bg-primary text-black border-primary shadow-lg shadow-primary/50 scale-105"
+                    : "bg-secondary/40 text-muted-foreground border-white/10 hover:border-primary/50 hover:bg-secondary/60"
+                )}
+                data-testid={`time-slot-${time.replace(/:/g, "-")}`}
+              >
+                {time}
+              </motion.button>
+            ))
+          ) : (
+            <div className="col-span-4 text-center py-8">
+              <p className="text-muted-foreground text-sm">Nenhum horário disponível para esta data</p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3">
