@@ -13,6 +13,10 @@ import Bookings from "@/pages/Bookings";
 import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import SelectBookingMode from "@/pages/SelectBookingMode";
+import SelectService from "@/pages/SelectService";
+import SelectBarber from "@/pages/SelectBarber";
+import SelectBarberByService from "@/pages/SelectBarberByService";
 
 function Router() {
   return (
@@ -21,6 +25,10 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/" component={Home} />
       <Route path="/explore" component={Explore} />
+      <Route path="/select-booking-mode" component={SelectBookingMode} />
+      <Route path="/select-service" component={SelectService} />
+      <Route path="/select-barber" component={SelectBarber} />
+      <Route path="/select-barber-by-service" component={SelectBarberByService} />
       <Route path="/barber/:id" component={BarberProfile} />
       <Route path="/booking" component={Booking} />
       <Route path="/bookings" component={Bookings} />
