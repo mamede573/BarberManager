@@ -79,9 +79,11 @@ export default function Bookings() {
     queryFn: async () => {
       if (!user?.id) return [];
       const result = await getAppointmentsByClient(user.id);
+      if (!result || !Array.isArray(result)) return [];
       return result.map((apt: any) => ({
         ...apt,
         date: new Date(apt.date),
+        serviceIds: apt.serviceIds || [],
       }));
     },
     enabled: !!user?.id,
@@ -330,7 +332,7 @@ export default function Bookings() {
                         <div>
                           <label className="text-xs text-muted-foreground block mb-2">Horário</label>
                           <div className="grid grid-cols-4 gap-2">
-                            {availableSlots.length > 0 ? (
+                            {Array.isArray(availableSlots) && availableSlots.length > 0 ? (
                               availableSlots.map((slot) => (
                                 <button
                                   key={slot}
