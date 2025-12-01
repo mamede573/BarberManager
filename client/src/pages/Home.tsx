@@ -76,22 +76,22 @@ export default function Home() {
             <h3 className="text-lg font-bold font-display">Serviços</h3>
             <span className="text-xs text-primary cursor-pointer">Ver tudo</span>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 pr-6 hide-scrollbar">
+          <div className="flex gap-3 overflow-x-auto pb-4 pr-6 hide-scrollbar">
             {loadingCategories ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 min-w-[70px]">
-                  <Skeleton className="w-16 h-16 rounded-2xl" />
-                  <Skeleton className="w-12 h-3" />
-                </div>
+                <Skeleton key={i} className="h-10 w-28 rounded-full" />
               ))
             ) : (
               categories.map((cat) => (
-                <div key={cat.id} className="flex flex-col items-center gap-2 min-w-[70px]" data-testid={`category-${cat.id}`}>
-                  <div className="w-16 h-16 rounded-2xl bg-secondary/50 border border-white/5 flex items-center justify-center text-2xl hover:bg-primary/20 hover:border-primary/50 transition-all cursor-pointer">
-                    {cat.icon}
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground">{cat.name}</span>
-                </div>
+                <motion.button
+                  key={cat.id}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 text-primary hover:from-primary/30 hover:to-primary/20 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20"
+                  data-testid={`category-${cat.id}`}
+                >
+                  {cat.name}
+                </motion.button>
               ))
             )}
           </div>
