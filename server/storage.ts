@@ -194,47 +194,63 @@ export class DatabaseStorage implements IStorage {
   async getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
     const allSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
     
-    // Get services and calculate total duration
-    const serviceList = await Promise.all(serviceIds.map(id => this.getService(id)));
-    const totalDuration = serviceList.reduce((sum, s) => sum + (s?.duration || 30), 0);
-    
-    // Get booked appointments for this barber
-    const bookedAppointments = await db.select().from(appointments)
-      .where(eq(appointments.barberId, barberId));
-    
-    // Convert target date to Brasília timezone for comparison
-    const targetDateStr = this.getDateInBrasiliaTimezone(date);
-    
-    const appointmentsOnDate = bookedAppointments.filter(appt => {
-      const apptDateStr = this.getDateInBrasiliaTimezone(appt.date);
-      return apptDateStr === targetDateStr && (appt.status === "confirmed" || appt.status === "pending");
-    });
-    
-    // Build time slots that are blocked by existing appointments
-    const blockedTimeRanges: Array<{ start: number; end: number }> = [];
-    
-    for (const appt of appointmentsOnDate) {
-      const apptServices = await Promise.all((appt.serviceIds || []).map(id => this.getService(id)));
-      const apptDuration = apptServices.reduce((sum, s) => sum + (s?.duration || 30), 0);
-      
-      const [apptHours, apptMinutes] = appt.time.split(":").map(Number);
-      const apptStartTime = apptHours * 60 + apptMinutes;
-      const apptEndTime = apptStartTime + apptDuration;
-      
-      blockedTimeRanges.push({ start: apptStartTime, end: apptEndTime });
-    }
-    
-    // Filter slots: return only those that don't conflict
-    return allSlots.filter(slot => {
-      const [hours, minutes] = slot.split(":").map(Number);
-      const slotStart = hours * 60 + minutes;
-      const slotEnd = slotStart + totalDuration;
-      
-      // Check if this slot conflicts with any blocked time range
-      return !blockedTimeRanges.some(range => 
-        slotStart < range.end && slotEnd > range.start
+    try {
+      // Get services and calculate total duration
+      const services = await Promise.all(
+        serviceIds.map(id => this.getService(id).catch(() => null))
       );
-    });
+      const totalDuration = services.reduce((sum, s) => sum + (s?.duration || 30), 0);
+      
+      // Get booked appointments for this barber
+      const bookedAppointments = await db.select().from(appointments)
+        .where(eq(appointments.barberId, barberId));
+      
+      // Convert target date to Brasília timezone for comparison
+      const targetDateStr = this.getDateInBrasiliaTimezone(date);
+      
+      const appointmentsOnDate = bookedAppointments.filter(appt => {
+        if (!appt.date) return false;
+        const apptDateStr = this.getDateInBrasiliaTimezone(appt.date);
+        return apptDateStr === targetDateStr && (appt.status === "confirmed" || appt.status === "pending");
+      });
+      
+      // Build blocked time ranges
+      const blockedTimeRanges: Array<{ start: number; end: number }> = [];
+      
+      for (const appt of appointmentsOnDate) {
+        if (!appt.time || !appt.serviceIds) continue;
+        
+        const apptServices = await Promise.all(
+          (appt.serviceIds || []).map(id => this.getService(id).catch(() => null))
+        );
+        const apptDuration = apptServices.reduce((sum, s) => sum + (s?.duration || 30), 0);
+        
+        const [apptHours, apptMinutes] = appt.time.split(":").map(Number);
+        const apptStartTime = apptHours * 60 + apptMinutes;
+        const apptEndTime = apptStartTime + apptDuration;
+        
+        blockedTimeRanges.push({ start: apptStartTime, end: apptEndTime });
+      }
+      
+      // Filter slots: return only those that don't conflict
+      return allSlots.filter(slot => {
+        const timeParts = slot.split(":");
+        if (timeParts.length !== 2) return false;
+        
+        const [hours, minutes] = timeParts.map(Number);
+        const slotStart = hours * 60 + minutes;
+        const slotEnd = slotStart + totalDuration;
+        
+        // Check if this slot conflicts with any blocked time range
+        return !blockedTimeRanges.some(range => 
+          slotStart < range.end && slotEnd > range.start
+        );
+      });
+    } catch (error) {
+      console.error("[ERROR] getAvailableSlots:", error, { barberId, date, serviceIds });
+      // Return all slots as fallback to avoid complete failure
+      return ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
+    }
   }
 
   // Reviews
