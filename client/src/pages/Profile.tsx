@@ -1,0 +1,269 @@
+import React, { useState } from "react";
+import MobileShell from "@/components/MobileShell";
+import { ChevronLeft, Edit2, LogOut, Bell, Lock, Trash2, Phone, Mail, MapPin, User as UserIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatar: string;
+  location?: string;
+  totalAppointments: number;
+  totalSpent: string;
+  memberSince: string;
+}
+
+// Mock user data - in a real app, this would come from the API
+const mockUserProfile: UserProfile = {
+  id: "demo-user-id",
+  name: "Michael",
+  email: "michael@example.com",
+  phone: "+1 (555) 123-4567",
+  avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
+  location: "Downtown, City Center",
+  totalAppointments: 12,
+  totalSpent: "450.00",
+  memberSince: "January 2024",
+};
+
+export default function Profile() {
+  const [, setLocation] = useLocation();
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState(mockUserProfile);
+  const [editFormData, setEditFormData] = useState(profile);
+
+  const handleSaveProfile = () => {
+    setProfile(editFormData);
+    setIsEditing(false);
+  };
+
+  const handleLogout = () => {
+    // In a real app, this would clear auth state
+    setLocation("/");
+  };
+
+  const menuItems = [
+    { icon: Bell, label: "Notifications", action: () => {} },
+    { icon: Lock, label: "Security", action: () => {} },
+    { icon: Trash2, label: "Delete Account", action: () => {}, destructive: true },
+  ];
+
+  return (
+    <MobileShell>
+      <div className="space-y-6 pb-32">
+        {/* Header */}
+        <div className="px-6 pt-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold font-display" data-testid="text-page-title">Profile</h1>
+          <Link href="/">
+            <div className="w-10 h-10 rounded-full bg-secondary/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-secondary cursor-pointer border border-white/10" data-testid="button-back">
+              <ChevronLeft className="w-5 h-5" />
+            </div>
+          </Link>
+        </div>
+
+        {/* Profile Card */}
+        <div className="px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-card to-card/50 border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+          >
+            {/* Background Gradient */}
+            <div className="h-24 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
+
+            {/* Profile Content */}
+            <div className="px-6 pb-6 -mt-12 relative z-10">
+              {/* Avatar */}
+              <div className="flex items-end gap-4 mb-6">
+                <img
+                  src={profile.avatar}
+                  alt={profile.name}
+                  className="w-24 h-24 rounded-full border-4 border-card/80 backdrop-blur-md object-cover shadow-lg"
+                  data-testid="avatar-profile"
+                />
+                {!isEditing && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    className="bg-primary/20 text-primary hover:bg-primary/30 border-primary/50 mb-1"
+                    data-testid="button-edit-profile"
+                  >
+                    <Edit2 className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+
+              {isEditing ? (
+                // Edit Mode
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Name</label>
+                    <input
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted-foreground outline-none focus:border-primary/50"
+                      data-testid="input-name"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Email</label>
+                    <input
+                      type="email"
+                      value={editFormData.email}
+                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted-foreground outline-none focus:border-primary/50"
+                      data-testid="input-email"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Phone</label>
+                    <input
+                      type="tel"
+                      value={editFormData.phone}
+                      onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted-foreground outline-none focus:border-primary/50"
+                      data-testid="input-phone"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Location</label>
+                    <input
+                      type="text"
+                      value={editFormData.location || ""}
+                      onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted-foreground outline-none focus:border-primary/50"
+                      data-testid="input-location"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-primary text-black hover:bg-primary/90"
+                      onClick={handleSaveProfile}
+                      data-testid="button-save"
+                    >
+                      Save Changes
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditFormData(profile);
+                      }}
+                      data-testid="button-cancel"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                // View Mode
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-xl font-bold font-display" data-testid="text-user-name">{profile.name}</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Member since {profile.memberSince}</p>
+                  </div>
+
+                  <div className="space-y-2 bg-secondary/30 rounded-xl p-3.5 border border-white/5">
+                    <div className="flex items-center gap-3 text-sm">
+                      <Mail className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground" data-testid="text-email">{profile.email}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Phone className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground" data-testid="text-phone">{profile.phone}</span>
+                    </div>
+                    {profile.location && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground" data-testid="text-location">{profile.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Stats */}
+        {!isEditing && (
+          <div className="px-6 grid grid-cols-2 gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-card border border-white/10 rounded-2xl p-4 text-center"
+            >
+              <p className="text-2xl font-bold font-display text-primary" data-testid="text-appointments">{profile.totalAppointments}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Bookings</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-card border border-white/10 rounded-2xl p-4 text-center"
+            >
+              <p className="text-2xl font-bold font-display text-primary" data-testid="text-spent">${profile.totalSpent}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Spent</p>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Menu Items */}
+        {!isEditing && (
+          <div className="px-6 space-y-2">
+            {menuItems.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <motion.button
+                  key={idx}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + idx * 0.05 }}
+                  onClick={item.action}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-4 rounded-xl border transition-all",
+                    item.destructive
+                      ? "bg-red-500/10 border-red-500/20 hover:border-red-500/50 text-red-400"
+                      : "bg-card border-white/10 hover:border-white/20 text-muted-foreground hover:text-foreground"
+                  )}
+                  data-testid={`button-menu-${item.label.toLowerCase().replace(" ", "-")}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium flex-1 text-left text-sm">{item.label}</span>
+                  <ChevronLeft className="w-4 h-4 rotate-180" />
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Logout Button */}
+        {!isEditing && (
+          <div className="px-6">
+            <Button
+              variant="outline"
+              className="w-full text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/50"
+              onClick={handleLogout}
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        )}
+      </div>
+    </MobileShell>
+  );
+}

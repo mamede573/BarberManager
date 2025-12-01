@@ -8,6 +8,8 @@ import Home from "@/pages/Home";
 import BarberProfile from "@/pages/BarberProfile";
 import Booking from "@/pages/Booking";
 import Explore from "@/pages/Explore";
+import Bookings from "@/pages/Bookings";
+import Profile from "@/pages/Profile";
 
 function Router() {
   return (
@@ -16,6 +18,8 @@ function Router() {
       <Route path="/explore" component={Explore} />
       <Route path="/barber/:id" component={BarberProfile} />
       <Route path="/booking" component={Booking} />
+      <Route path="/bookings" component={Bookings} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );
