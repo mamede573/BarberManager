@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { getServices } from "@/lib/api";
+import { getServices, getBarbers } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SelectBarberStep() {
@@ -22,16 +22,24 @@ export default function SelectBarberStep() {
     setServiceId(id);
   }, []);
 
-  const { data: services = [], isLoading } = useQuery({
+  const { data: services = [], isLoading: loadingServices } = useQuery({
     queryKey: ["services"],
     queryFn: getServices,
+  });
+
+  const { data: allBarbers = [], isLoading: loadingBarbers } = useQuery({
+    queryKey: ["barbers"],
+    queryFn: getBarbers,
   });
 
   const barbersWithService = Array.from(
     new Map(
       services
         .filter(s => s.id === serviceId)
-        .map(s => [s.barberId, { id: s.barberId, name: s.barberId }])
+        .map(s => {
+          const barber = allBarbers.find(b => b.id === s.barberId);
+          return [s.barberId, { id: s.barberId, name: barber?.name || s.barberId }];
+        })
     ).values()
   );
 
@@ -39,17 +47,25 @@ export default function SelectBarberStep() {
     b.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const isLoading = loadingServices || loadingBarbers;
+
   const handleSelectBarber = (barberId: string) => {
     sessionStorage.setItem("bookingStep", "3");
     sessionStorage.setItem("selectedBarberId", barberId);
-    setLocation("/booking-step-4-date");
+    setLocation("/booking-step-3-date");
   };
 
   return (
     <MobileShell hideNav>
       <div className="px-6 pt-6 flex items-center gap-4 pb-6 border-b border-white/5">
         <Link href="/booking-step-2-service">
-          <Button variant="ghost" size="icon" className="hover:bg-white/5 -ml-2" data-testid="button-back">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-white/5 -ml-2" 
+            data-testid="button-back"
+            onClick={() => sessionStorage.removeItem("selectedServiceId")}
+          >
             <ChevronLeft className="w-6 h-6" />
           </Button>
         </Link>

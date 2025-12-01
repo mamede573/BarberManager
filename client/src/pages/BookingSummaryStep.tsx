@@ -50,7 +50,7 @@ export default function BookingSummaryStep() {
 
   const handleNext = () => {
     sessionStorage.setItem("bookingStep", "6");
-    setLocation("/booking-step-7-confirm");
+    setLocation("/booking-step-6-confirm");
   };
 
   const dateObj = date ? new Date(date) : null;

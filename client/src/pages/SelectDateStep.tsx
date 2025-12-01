@@ -23,7 +23,7 @@ export default function SelectDateStep() {
     if (!date) return;
     sessionStorage.setItem("bookingStep", "4");
     sessionStorage.setItem("selectedDate", date.toISOString().split("T")[0]);
-    setLocation("/booking-step-5-time");
+    setLocation("/booking-step-4-time");
   };
 
   return (

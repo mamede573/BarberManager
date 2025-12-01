@@ -127,6 +127,7 @@ export default function Bookings() {
     setReschedulingId(appointment.id);
     setSelectedDate("");
     setSelectedTime("");
+    setAvailableSlots(timeSlots);
   };
 
   const handleDateSelect = async (appointment: BookingItem, date: string) => {
@@ -307,7 +308,19 @@ export default function Bookings() {
                         Deixar Avaliação
                       </Button>
                     ) : (
-                      <Button size="sm" variant="outline" className="w-full text-xs" data-testid={`button-rebook-${booking.id}`}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full text-xs" 
+                        onClick={() => {
+                          sessionStorage.removeItem("selectedServiceId");
+                          sessionStorage.removeItem("selectedBarberId");
+                          sessionStorage.removeItem("selectedDate");
+                          sessionStorage.removeItem("selectedTime");
+                          setLocation("/booking-step-2-service");
+                        }}
+                        data-testid={`button-rebook-${booking.id}`}
+                      >
                         Agendar Novamente
                       </Button>
                     )}

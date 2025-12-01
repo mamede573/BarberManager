@@ -28,11 +28,11 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/explore" component={Explore} />
       <Route path="/booking-step-2-service" component={SelectServiceStep} />
-      <Route path="/booking-step-3-barber" component={SelectBarberStep} />
-      <Route path="/booking-step-4-date" component={SelectDateStep} />
-      <Route path="/booking-step-5-time" component={SelectTimeStep} />
-      <Route path="/booking-step-6-summary" component={BookingSummaryStep} />
-      <Route path="/booking-step-7-confirm" component={BookingConfirmationStep} />
+      <Route path="/booking-step-2-barber" component={SelectBarberStep} />
+      <Route path="/booking-step-3-date" component={SelectDateStep} />
+      <Route path="/booking-step-4-time" component={SelectTimeStep} />
+      <Route path="/booking-step-5-summary" component={BookingSummaryStep} />
+      <Route path="/booking-step-6-confirm" component={BookingConfirmationStep} />
       <Route path="/barber/:id" component={BarberProfile} />
       <Route path="/booking" component={Booking} />
       <Route path="/bookings" component={Bookings} />

@@ -29,7 +29,7 @@ export default function SelectTimeStep() {
     if (!selectedTime) return;
     sessionStorage.setItem("bookingStep", "5");
     sessionStorage.setItem("selectedTime", selectedTime);
-    setLocation("/booking-step-6-summary");
+    setLocation("/booking-step-5-summary");
   };
 
   return (

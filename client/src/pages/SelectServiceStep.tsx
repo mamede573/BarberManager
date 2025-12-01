@@ -24,7 +24,7 @@ export default function SelectServiceStep() {
   const handleSelectService = (serviceId: string) => {
     sessionStorage.setItem("bookingStep", "2");
     sessionStorage.setItem("selectedServiceId", serviceId);
-    setLocation("/booking-step-3-barber");
+    setLocation("/booking-step-2-barber");
   };
 
   return (
