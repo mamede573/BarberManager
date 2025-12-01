@@ -98,13 +98,13 @@ async function seed() {
 
   // Create services for each barber
   const serviceTemplates = [
-    { name: "Classic Haircut", description: "Traditional cut with clippers and scissors", duration: 45, price: "35.00" },
-    { name: "Beard Trim & Shape", description: "Expert beard grooming and shaping", duration: 30, price: "25.00" },
-    { name: "Hot Towel Shave", description: "Relaxing straight razor shave with hot towels", duration: 40, price: "40.00" },
-    { name: "Hair & Beard Combo", description: "Complete haircut and beard service", duration: 75, price: "55.00" },
-    { name: "Kids Haircut", description: "Gentle cuts for children under 12", duration: 30, price: "25.00" },
-    { name: "Hair Color / Dye", description: "Professional coloring service", duration: 90, price: "80.00" },
-    { name: "Facial Treatment", description: "Deep cleansing and moisturizing facial", duration: 45, price: "50.00" },
+    { name: "Classic Haircut", description: "Traditional cut with clippers and scissors", duration: 45, price: "35.00", image: "https://images.pexels.com/photos/1390235/pexels-photo-1390235.jpeg" },
+    { name: "Beard Trim & Shape", description: "Expert beard grooming and shaping", duration: 30, price: "25.00", image: "https://images.pexels.com/photos/991537/pexels-photo-991537.jpeg" },
+    { name: "Hot Towel Shave", description: "Relaxing straight razor shave with hot towels", duration: 40, price: "40.00", image: "https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg" },
+    { name: "Hair & Beard Combo", description: "Complete haircut and beard service", duration: 75, price: "55.00", image: "https://images.pexels.com/photos/1308881/pexels-photo-1308881.jpeg" },
+    { name: "Kids Haircut", description: "Gentle cuts for children under 12", duration: 30, price: "25.00", image: "https://images.pexels.com/photos/8018316/pexels-photo-8018316.jpeg" },
+    { name: "Hair Color / Dye", description: "Professional coloring service", duration: 90, price: "80.00", image: "https://images.pexels.com/photos/3722621/pexels-photo-3722621.jpeg" },
+    { name: "Facial Treatment", description: "Deep cleansing and moisturizing facial", duration: 45, price: "50.00", image: "https://images.pexels.com/photos/3852584/pexels-photo-3852584.jpeg" },
   ];
 
   for (const barber of createdBarbers) {

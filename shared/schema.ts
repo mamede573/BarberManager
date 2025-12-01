@@ -56,6 +56,7 @@ export const services = pgTable("services", {
   barberId: varchar("barber_id").notNull().references(() => barbers.id),
   name: text("name").notNull(),
   description: text("description"),
+  image: text("image"),
   duration: integer("duration").notNull(), // in minutes
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   categoryId: varchar("category_id").references(() => categories.id),

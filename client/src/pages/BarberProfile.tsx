@@ -142,17 +142,14 @@ export default function BarberProfile() {
           {/* Services */}
           <section>
             <h3 className="text-lg font-bold font-display mb-4">Services</h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4">
               {loadingServices ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="p-4 rounded-2xl border border-white/5 bg-card">
-                    <div className="flex items-center gap-4">
-                      <Skeleton className="w-10 h-10 rounded-full" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-3 w-1/4" />
-                      </div>
-                      <Skeleton className="h-6 w-12" />
+                  <div key={i} className="rounded-2xl border border-white/5 bg-card overflow-hidden">
+                    <Skeleton className="w-full h-48" />
+                    <div className="p-4 space-y-2">
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-3 w-1/4" />
                     </div>
                   </div>
                 ))
@@ -160,42 +157,58 @@ export default function BarberProfile() {
                 services.map((service) => {
                   const isSelected = selectedServices.includes(service.id);
                   return (
-                    <div 
+                    <motion.div 
                       key={service.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => toggleService(service.id)}
                       className={cn(
-                        "p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group",
+                        "rounded-2xl border-2 overflow-hidden transition-all cursor-pointer",
                         isSelected 
-                          ? "bg-primary/10 border-primary/50" 
-                          : "bg-card border-white/5 hover:border-white/10"
+                          ? "border-primary bg-primary/10 shadow-lg shadow-primary/20" 
+                          : "border-white/5 bg-card hover:border-white/10"
                       )}
                       data-testid={`service-${service.id}`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                          isSelected ? "bg-primary text-black" : "bg-secondary text-muted-foreground"
-                        )}>
-                          <Scissors className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className={cn("font-bold", isSelected ? "text-primary" : "text-foreground")}>{service.name}</h4>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <div className="relative h-48 overflow-hidden bg-secondary">
+                        {service.image ? (
+                          <img 
+                            src={service.image} 
+                            alt={service.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Scissors className="w-12 h-12 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-3 right-3 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/50"
+                          >
+                            <div className="w-2 h-2 bg-black rounded-full" />
+                          </motion.div>
+                        )}
+                      </div>
+                      
+                      <div className="p-4 pb-3 flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className={cn("font-bold font-display", isSelected ? "text-primary" : "text-foreground")}>{service.name}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
                             <Clock className="w-3 h-3" />
                             <span>{service.duration} min</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold font-display text-lg">${parseFloat(service.price).toFixed(0)}</span>
-                        <div className={cn(
-                          "w-6 h-6 rounded-full border flex items-center justify-center transition-all",
-                          isSelected ? "bg-primary border-primary" : "border-white/20"
-                        )}>
-                          {isSelected && <div className="w-2 h-2 bg-black rounded-full" />}
+                        <div className="text-right ml-3">
+                          <span className="font-bold font-display text-lg text-primary">${parseFloat(service.price).toFixed(0)}</span>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })
               )}
