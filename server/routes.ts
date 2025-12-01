@@ -254,6 +254,56 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/appointments/client/:clientId", async (req, res) => {
+    try {
+      const appointments = await storage.getAppointmentsByClient(req.params.clientId);
+      res.json(appointments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
+  app.patch("/api/appointments/:id/cancel", async (req, res) => {
+    try {
+      const appointment = await storage.cancelAppointment(req.params.id);
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      res.json(appointment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to cancel appointment" });
+    }
+  });
+
+  app.patch("/api/appointments/:id/reschedule", async (req, res) => {
+    try {
+      const { date, time } = req.body;
+      if (!date || !time) {
+        return res.status(400).json({ message: "Date and time are required" });
+      }
+      const appointment = await storage.rescheduleAppointment(req.params.id, new Date(date), time);
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      res.json(appointment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reschedule appointment" });
+    }
+  });
+
+  app.post("/api/barbers/:barberId/available-slots", async (req, res) => {
+    try {
+      const { date, serviceIds } = req.body;
+      if (!date || !serviceIds) {
+        return res.status(400).json({ message: "Date and serviceIds are required" });
+      }
+      const slots = await storage.getAvailableSlots(req.params.barberId, new Date(date), serviceIds);
+      res.json(slots);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch available slots" });
+    }
+  });
+
   // ============ REVIEWS ============
   app.get("/api/barbers/:barberId/reviews", async (req, res) => {
     try {

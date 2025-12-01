@@ -77,3 +77,41 @@ export async function getAppointments(): Promise<Appointment[]> {
   if (!res.ok) throw new Error("Failed to fetch appointments");
   return res.json();
 }
+
+export async function getAppointmentsByClient(clientId: string): Promise<Appointment[]> {
+  const res = await fetch(`${API_BASE}/appointments/client/${clientId}`);
+  if (!res.ok) throw new Error("Failed to fetch appointments");
+  return res.json();
+}
+
+export async function cancelAppointment(appointmentId: string): Promise<Appointment> {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/cancel`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to cancel appointment");
+  return res.json();
+}
+
+export async function rescheduleAppointment(appointmentId: string, data: {
+  date: Date;
+  time: string;
+}): Promise<Appointment> {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/reschedule`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to reschedule appointment");
+  return res.json();
+}
+
+export async function getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/barbers/${barberId}/available-slots`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ date, serviceIds }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch available slots");
+  return res.json();
+}

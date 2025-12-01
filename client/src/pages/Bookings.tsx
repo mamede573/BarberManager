@@ -1,63 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Calendar, Clock, MapPin, Star, Trash2, MessageCircle } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, Star, MessageCircle, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cancelAppointment, rescheduleAppointment, getAvailableSlots, getAppointmentsByClient } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 interface BookingItem {
   id: string;
   barberId: string;
-  barberName: string;
-  date: string;
+  barberName?: string;
+  date: Date;
   time: string;
   services: string[];
   totalPrice: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   paymentStatus: "pending" | "paid" | "refunded";
   rating?: number;
+  serviceIds?: string[];
 }
-
-// Mock data for now - in a real app, this would come from the API
-const mockBookings: BookingItem[] = [
-  {
-    id: "1",
-    barberId: "barber-1",
-    barberName: "Jack 'The Clipper'",
-    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    time: "2:00 PM",
-    services: ["Classic Haircut", "Beard Trim & Shape"],
-    totalPrice: "60.00",
-    status: "confirmed",
-    paymentStatus: "paid",
-  },
-  {
-    id: "2",
-    barberId: "barber-2",
-    barberName: "Gentleman's Den",
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    time: "10:00 AM",
-    services: ["Hot Towel Shave"],
-    totalPrice: "40.00",
-    status: "pending",
-    paymentStatus: "pending",
-  },
-  {
-    id: "3",
-    barberId: "barber-3",
-    barberName: "Iron & Ink",
-    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    time: "3:30 PM",
-    services: ["Classic Haircut"],
-    totalPrice: "35.00",
-    status: "completed",
-    paymentStatus: "paid",
-    rating: 5,
-  },
-];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -89,26 +55,94 @@ const getStatusLabel = (status: string) => {
   }
 };
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("pt-BR", { month: "short", day: "numeric", year: "numeric" });
+const formatDate = (date: Date) => {
+  return new Date(date).toLocaleDateString("pt-BR", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const isUpcoming = (dateString: string) => {
-  return new Date(dateString) > new Date();
+const isUpcoming = (date: Date) => {
+  return new Date(date) > new Date();
 };
+
+const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
 
 export default function Bookings() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<string[]>(timeSlots);
+  const queryClient = useQueryClient();
 
-  // In a real app, this would fetch from the API
-  // const { data: appointments = [], isLoading } = useQuery({
-  //   queryKey: ["appointments", clientId],
-  //   queryFn: () => getAppointmentsByClient(clientId),
-  // });
+  const { data: appointments = [], isLoading, error } = useQuery({
+    queryKey: ["appointments", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const result = await getAppointmentsByClient(user.id);
+      return result.map((apt: any) => ({
+        ...apt,
+        date: new Date(apt.date),
+      }));
+    },
+    enabled: !!user?.id,
+  });
 
-  const filteredBookings = mockBookings.filter((booking) => {
+  const cancelMutation = useMutation({
+    mutationFn: (appointmentId: string) => cancelAppointment(appointmentId),
+    onSuccess: () => {
+      toast.success("Agendamento cancelado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["appointments", user?.id] });
+    },
+    onError: () => {
+      toast.error("Erro ao cancelar agendamento");
+    },
+  });
+
+  const rescheduleMutation = useMutation({
+    mutationFn: (data: { appointmentId: string; date: Date; time: string }) =>
+      rescheduleAppointment(data.appointmentId, { date: data.date, time: data.time }),
+    onSuccess: () => {
+      toast.success("Agendamento remarcado com sucesso");
+      setReschedulingId(null);
+      setSelectedDate("");
+      setSelectedTime("");
+      queryClient.invalidateQueries({ queryKey: ["appointments", user?.id] });
+    },
+    onError: () => {
+      toast.error("Erro ao remarcar agendamento");
+    },
+  });
+
+  const handleRescheduleClick = async (appointment: BookingItem) => {
+    setReschedulingId(appointment.id);
+    setSelectedDate("");
+    setSelectedTime("");
+  };
+
+  const handleDateSelect = async (appointment: BookingItem, date: string) => {
+    setSelectedDate(date);
+    try {
+      const slots = await getAvailableSlots(appointment.barberId, new Date(date), appointment.serviceIds || []);
+      setAvailableSlots(slots);
+    } catch (error) {
+      toast.error("Erro ao carregar horários disponíveis");
+    }
+  };
+
+  const handleConfirmReschedule = async (appointment: BookingItem) => {
+    if (!selectedDate || !selectedTime) {
+      toast.error("Selecione data e hora");
+      return;
+    }
+    await rescheduleMutation.mutateAsync({
+      appointmentId: appointment.id,
+      date: new Date(selectedDate),
+      time: selectedTime,
+    });
+  };
+
+  const filteredBookings = appointments.filter((booking: BookingItem) => {
     if (filter === "upcoming") return isUpcoming(booking.date);
     if (filter === "completed") return !isUpcoming(booking.date);
     return true;
@@ -135,19 +169,19 @@ export default function Bookings() {
           {(["all", "upcoming", "completed"] as const).map((tab) => {
             const labels = { all: "Todos", upcoming: "Próximos", completed: "Concluídos" };
             return (
-            <motion.button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold transition-all border",
-                filter === tab
-                  ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
-                  : "bg-secondary/50 text-muted-foreground border-white/10 hover:border-white/20"
-              )}
-              data-testid={`filter-${tab}`}
-            >
-              {labels[tab]}
-            </motion.button>
+              <motion.button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-xs font-bold transition-all border",
+                  filter === tab
+                    ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
+                    : "bg-secondary/50 text-muted-foreground border-white/10 hover:border-white/20"
+                )}
+                data-testid={`filter-${tab}`}
+              >
+                {labels[tab]}
+              </motion.button>
             );
           })}
         </div>
@@ -155,8 +189,16 @@ export default function Bookings() {
         {/* Bookings List */}
         <div className="px-6 space-y-4">
           <AnimatePresence mode="wait">
-            {filteredBookings.length > 0 ? (
-              filteredBookings.map((booking, idx) => (
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="border border-white/10 bg-card rounded-2xl overflow-hidden p-4 space-y-3">
+                  <Skeleton className="h-6 w-1/2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))
+            ) : filteredBookings.length > 0 ? (
+              filteredBookings.map((booking: BookingItem, idx: number) => (
                 <motion.div
                   key={booking.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -168,7 +210,9 @@ export default function Bookings() {
                   {/* Booking Header */}
                   <div className="p-4 pb-3 flex items-start justify-between border-b border-white/5">
                     <div className="flex-1">
-                      <h3 className="font-bold font-display text-lg" data-testid={`booking-barber-${booking.id}`}>{booking.barberName}</h3>
+                      <h3 className="font-bold font-display text-lg" data-testid={`booking-barber-${booking.id}`}>
+                        {booking.barberName || "Barbeiro"}
+                      </h3>
                       <div className="flex items-center gap-2 mt-1">
                         <div className={cn("text-xs px-2.5 py-1 rounded-full font-bold", getStatusColor(booking.status))} data-testid={`booking-status-${booking.id}`}>
                           {getStatusLabel(booking.status)}
@@ -182,7 +226,9 @@ export default function Bookings() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-primary" data-testid={`booking-price-${booking.id}`}>R$ {booking.totalPrice}</p>
+                      <p className="text-sm font-bold text-primary" data-testid={`booking-price-${booking.id}`}>
+                        R$ {booking.totalPrice}
+                      </p>
                       <p className="text-xs text-muted-foreground">{booking.paymentStatus === "paid" ? "Pago" : "Pendente"}</p>
                     </div>
                   </div>
@@ -191,11 +237,15 @@ export default function Bookings() {
                   <div className="p-4 space-y-3">
                     <div className="flex items-center gap-3 text-sm">
                       <Calendar className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground" data-testid={`booking-date-${booking.id}`}>{formatDate(booking.date)}</span>
+                      <span className="text-muted-foreground" data-testid={`booking-date-${booking.id}`}>
+                        {formatDate(booking.date)}
+                      </span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Clock className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground" data-testid={`booking-time-${booking.id}`}>{booking.time}</span>
+                      <span className="text-muted-foreground" data-testid={`booking-time-${booking.id}`}>
+                        {booking.time}
+                      </span>
                     </div>
                     <div className="pt-2">
                       <p className="text-xs text-muted-foreground mb-2">Serviços:</p>
@@ -211,21 +261,25 @@ export default function Bookings() {
 
                   {/* Actions */}
                   <div className="px-4 pb-4 flex gap-2 pt-2 border-t border-white/5">
-                    {isUpcoming(booking.date) ? (
+                    {isUpcoming(booking.date) && booking.status !== "cancelled" ? (
                       <>
                         <Button
                           variant="outline"
                           size="sm"
                           className="flex-1 text-xs"
+                          onClick={() => handleRescheduleClick(booking)}
                           data-testid={`button-reschedule-${booking.id}`}
+                          disabled={reschedulingId === booking.id}
                         >
                           Remarcar
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 text-xs"
+                          className="flex-1 text-xs text-red-400 hover:text-red-300"
+                          onClick={() => cancelMutation.mutate(booking.id)}
                           data-testid={`button-cancel-${booking.id}`}
+                          disabled={cancelMutation.isPending}
                         >
                           Cancelar
                         </Button>
@@ -240,24 +294,78 @@ export default function Bookings() {
                         Deixar Avaliação
                       </Button>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full text-xs"
-                        data-testid={`button-rebook-${booking.id}`}
-                      >
+                      <Button size="sm" variant="outline" className="w-full text-xs" data-testid={`button-rebook-${booking.id}`}>
                         Agendar Novamente
                       </Button>
                     )}
                   </div>
+
+                  {/* Reschedule Modal */}
+                  {reschedulingId === booking.id && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="border-t border-white/5 bg-secondary/20 p-4 space-y-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-sm">Selecionar nova data e hora</h4>
+                        <button onClick={() => setReschedulingId(null)} className="p-1 hover:bg-white/10 rounded">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Date Picker */}
+                      <div>
+                        <label className="text-xs text-muted-foreground block mb-2">Data</label>
+                        <input
+                          type="date"
+                          value={selectedDate}
+                          onChange={(e) => handleDateSelect(booking, e.target.value)}
+                          className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm text-foreground"
+                          min={new Date().toISOString().split("T")[0]}
+                        />
+                      </div>
+
+                      {/* Time Picker */}
+                      {selectedDate && (
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-2">Horário</label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {availableSlots.length > 0 ? (
+                              availableSlots.map((slot) => (
+                                <button
+                                  key={slot}
+                                  onClick={() => setSelectedTime(slot)}
+                                  className={cn(
+                                    "py-2 px-2 rounded-lg text-xs font-bold transition-all border",
+                                    selectedTime === slot
+                                      ? "bg-primary text-black border-primary"
+                                      : "bg-secondary border-white/10 hover:border-white/20"
+                                  )}
+                                  data-testid={`time-slot-${slot}`}
+                                >
+                                  {slot}
+                                </button>
+                              ))
+                            ) : (
+                              <p className="col-span-4 text-xs text-muted-foreground text-center py-2">Sem horários disponíveis</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Confirm Button */}
+                      <Button
+                        size="sm"
+                        className="w-full bg-primary text-black hover:bg-primary/90"
+                        onClick={() => handleConfirmReschedule(booking)}
+                        disabled={rescheduleMutation.isPending || !selectedDate || !selectedTime}
+                        data-testid={`button-confirm-reschedule-${booking.id}`}
+                      >
+                        {rescheduleMutation.isPending ? "Remarcando..." : "Confirmar Remarque"}
+                      </Button>
+                    </motion.div>
+                  )}
                 </motion.div>
               ))
             ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
                 <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
                 <p className="text-muted-foreground text-sm">Nenhuma reserva encontrada</p>
                 <Button

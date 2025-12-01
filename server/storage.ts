@@ -8,7 +8,7 @@ import {
   type Notification, type InsertNotification, notifications
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -43,6 +43,9 @@ export interface IStorage {
   getAppointment(id: string): Promise<Appointment | undefined>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: string, appointment: Partial<InsertAppointment>): Promise<Appointment | undefined>;
+  cancelAppointment(appointmentId: string): Promise<Appointment | undefined>;
+  rescheduleAppointment(appointmentId: string, newDate: Date, newTime: string): Promise<Appointment | undefined>;
+  getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]>;
   
   // Reviews
   getReviewsByBarber(barberId: string): Promise<Review[]>;
@@ -169,6 +172,36 @@ export class DatabaseStorage implements IStorage {
   async updateAppointment(id: string, appointment: Partial<InsertAppointment>): Promise<Appointment | undefined> {
     const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
     return updated;
+  }
+
+  async cancelAppointment(appointmentId: string): Promise<Appointment | undefined> {
+    const [updated] = await db.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, appointmentId)).returning();
+    return updated;
+  }
+
+  async rescheduleAppointment(appointmentId: string, newDate: Date, newTime: string): Promise<Appointment | undefined> {
+    const [updated] = await db.update(appointments).set({ date: newDate, time: newTime }).where(eq(appointments.id, appointmentId)).returning();
+    return updated;
+  }
+
+  async getAvailableSlots(barberId: string, date: Date, serviceIds: string[]): Promise<string[]> {
+    const allSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"];
+    
+    const serviceList = await Promise.all(serviceIds.map(id => this.getService(id)));
+    const totalDuration = serviceList.reduce((sum, s) => sum + (s?.duration || 0), 0);
+    
+    const bookedAppointments = await db.select().from(appointments)
+      .where(eq(appointments.barberId, barberId))
+      .where(eq(appointments.status, "confirmed") || eq(appointments.status, "pending"));
+    
+    const bookedSlots = new Set<string>();
+    bookedAppointments.forEach(appt => {
+      if (appt.date.toDateString() === new Date(date).toDateString()) {
+        bookedSlots.add(appt.time);
+      }
+    });
+    
+    return allSlots.filter(slot => !bookedSlots.has(slot));
   }
 
   // Reviews
