@@ -261,9 +261,9 @@ export default function Booking() {
       <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-6 animate-in zoom-in duration-500">
         <CheckCircle2 className="w-12 h-12 text-green-500" />
       </div>
-      <h2 className="text-3xl font-bold font-display text-white mb-2">Booking Confirmed!</h2>
+      <h2 className="text-3xl font-bold font-display text-white mb-2">Agendamento Confirmado!</h2>
       <p className="text-muted-foreground mb-8">
-        Your appointment with {bookingData?.barberName} is set for {date?.toLocaleDateString()} at {selectedTime}.
+        Seu agendamento com {bookingData?.barberName} está marcado para {date?.toLocaleDateString("pt-BR")} às {selectedTime}.
       </p>
       
       <div className="w-full space-y-3">
@@ -273,14 +273,14 @@ export default function Booking() {
           onClick={() => setLocation("/")}
           data-testid="button-back-home"
         >
-          Back to Home
+          Voltar para Home
         </Button>
         <Button 
           variant="outline" 
           size="lg" 
           className="w-full border-white/10 hover:bg-white/5 rounded-xl"
         >
-          Add to Calendar
+          Adicionar ao Calendário
         </Button>
       </div>
     </div>
@@ -291,9 +291,9 @@ export default function Booking() {
       <MobileShell hideNav>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <p className="text-muted-foreground mb-4">No services selected</p>
+            <p className="text-muted-foreground mb-4">Nenhum serviço selecionado</p>
             <Link href="/">
-              <Button>Go Back</Button>
+              <Button>Voltar</Button>
             </Link>
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function Booking() {
             <ChevronLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-lg font-bold font-display">
-            {step === 1 ? "Select Date & Time" : "Review & Pay"}
+            {step === 1 ? "Selecione Data e Horário" : "Revisar e Pagar"}
           </h1>
         </div>
       )}
@@ -335,7 +335,7 @@ export default function Booking() {
             onClick={() => step === 1 ? setStep(2) : handleConfirmBooking()}
             data-testid="button-booking-continue"
           >
-            {createAppointmentMutation.isPending ? "Processing..." : step === 1 ? "Continue" : "Pay & Confirm"}
+            {createAppointmentMutation.isPending ? "Processando..." : step === 1 ? "Continuar" : "Pagar e Confirmar"}
           </Button>
         </div>
       )}

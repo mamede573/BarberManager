@@ -68,7 +68,7 @@ export default function BarberProfile() {
     return (
       <MobileShell hideNav>
         <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Barber not found</p>
+          <p className="text-muted-foreground">Barbeiro não encontrado</p>
         </div>
       </MobileShell>
     );
@@ -111,11 +111,11 @@ export default function BarberProfile() {
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-primary fill-primary" />
                   <span className="text-white font-bold">{barber.rating}</span>
-                  <span>({barber.reviewCount} reviews)</span>
+                  <span>({barber.reviewCount} avaliações)</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  <span>{barber.distance} away</span>
+                  <span>{barber.distance} de distância</span>
                 </div>
               </div>
             </div>

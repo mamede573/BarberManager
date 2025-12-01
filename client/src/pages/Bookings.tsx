@@ -77,13 +77,13 @@ const getStatusColor = (status: string) => {
 const getStatusLabel = (status: string) => {
   switch (status) {
     case "confirmed":
-      return "Confirmed";
+      return "Confirmado";
     case "pending":
-      return "Pending";
+      return "Pendente";
     case "completed":
-      return "Completed";
+      return "Concluído";
     case "cancelled":
-      return "Cancelled";
+      return "Cancelado";
     default:
       return status;
   }
@@ -91,7 +91,7 @@ const getStatusLabel = (status: string) => {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString("pt-BR", { month: "short", day: "numeric", year: "numeric" });
 };
 
 const isUpcoming = (dateString: string) => {
