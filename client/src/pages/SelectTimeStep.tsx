@@ -123,8 +123,8 @@ export default function SelectTimeStep() {
         <div className="flex gap-3">
           <Button
             onClick={handleNext}
-            disabled={!selectedTime}
-            className="flex-1 bg-primary text-black hover:bg-primary/90 font-bold"
+            disabled={!selectedTime || availableSlots.length === 0}
+            className="flex-1 bg-primary text-black hover:bg-primary/90 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="button-next-summary"
           >
             Próximo
