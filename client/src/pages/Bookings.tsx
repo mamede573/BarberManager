@@ -54,6 +54,13 @@ const getStatusLabel = (status: string) => {
   }
 };
 
+// Helper: Convert date to Brasília timezone string (YYYY-MM-DD)
+function getDateInBrasiliaTimezone(date: Date): string {
+  const offset = -3 * 60; // Brasília is UTC-3
+  const lokalDate = new Date(date.getTime() + (offset + date.getTimezoneOffset()) * 60 * 1000);
+  return lokalDate.toISOString().split("T")[0];
+}
+
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString("pt-BR", { month: "short", day: "numeric", year: "numeric" });
 };
@@ -351,7 +358,7 @@ export default function Bookings() {
                           value={selectedDate}
                           onChange={(e) => handleDateSelect(booking, e.target.value)}
                           className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm text-foreground"
-                          min={new Date().toISOString().split("T")[0]}
+                          min={getDateInBrasiliaTimezone(new Date())}
                         />
                       </div>
 

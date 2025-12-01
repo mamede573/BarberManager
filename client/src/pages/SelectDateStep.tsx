@@ -7,9 +7,19 @@ import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { getAvailableSlots } from "@/lib/api";
 
+// Helper: Convert date to Brasília timezone string (YYYY-MM-DD)
+function getDateInBrasiliaTimezone(date: Date): string {
+  const offset = -3 * 60; // Brasília is UTC-3
+  const lokalDate = new Date(date.getTime() + (offset + date.getTimezoneOffset()) * 60 * 1000);
+  return lokalDate.toISOString().split("T")[0];
+}
+
 export default function SelectDateStep() {
   const [, setLocation] = useLocation();
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(() => {
+    const today = new Date();
+    return today;
+  });
   const [barberId, setBarberId] = useState<string | null>(null);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [disabledDates, setDisabledDates] = useState<Set<string>>(new Set());
@@ -37,7 +47,7 @@ export default function SelectDateStep() {
       for (let i = 0; i < 30; i++) {
         const checkDate = new Date(today);
         checkDate.setDate(checkDate.getDate() + i);
-        const dateStr = checkDate.toISOString().split("T")[0];
+        const dateStr = getDateInBrasiliaTimezone(checkDate);
         
         try {
           const slots = await getAvailableSlots(barberId, dateStr, [serviceId]);
@@ -57,7 +67,7 @@ export default function SelectDateStep() {
 
   const handleNext = () => {
     if (!date) return;
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = getDateInBrasiliaTimezone(date);
     if (disabledDates.has(dateStr)) {
       return; // Don't allow selecting disabled dates
     }
@@ -108,13 +118,13 @@ export default function SelectDateStep() {
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               if (d < today) return true;
-              const dateStr = d.toISOString().split("T")[0];
+              const dateStr = getDateInBrasiliaTimezone(d);
               return disabledDates.has(dateStr);
             }}
           />
         </div>
 
-        {date && disabledDates.has(date.toISOString().split("T")[0]) && (
+        {date && disabledDates.has(getDateInBrasiliaTimezone(date)) && (
           <div className="mt-6 flex items-start gap-3 p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/30">
             <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -127,7 +137,7 @@ export default function SelectDateStep() {
         <div className="mt-8 flex gap-3">
           <Button
             onClick={handleNext}
-            disabled={!date || disabledDates.has(date.toISOString().split("T")[0])}
+            disabled={!date || disabledDates.has(getDateInBrasiliaTimezone(date))}
             className="flex-1 bg-primary text-black hover:bg-primary/90 font-bold"
             data-testid="button-next-time"
           >
