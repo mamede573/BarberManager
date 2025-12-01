@@ -13,10 +13,12 @@ import Bookings from "@/pages/Bookings";
 import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
-import SelectBookingMode from "@/pages/SelectBookingMode";
-import SelectService from "@/pages/SelectService";
-import SelectBarber from "@/pages/SelectBarber";
-import SelectBarberByService from "@/pages/SelectBarberByService";
+import SelectServiceStep from "@/pages/SelectServiceStep";
+import SelectBarberStep from "@/pages/SelectBarberStep";
+import SelectDateStep from "@/pages/SelectDateStep";
+import SelectTimeStep from "@/pages/SelectTimeStep";
+import BookingSummaryStep from "@/pages/BookingSummaryStep";
+import BookingConfirmationStep from "@/pages/BookingConfirmationStep";
 
 function Router() {
   return (
@@ -25,10 +27,12 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/" component={Home} />
       <Route path="/explore" component={Explore} />
-      <Route path="/select-booking-mode" component={SelectBookingMode} />
-      <Route path="/select-service" component={SelectService} />
-      <Route path="/select-barber" component={SelectBarber} />
-      <Route path="/select-barber-by-service" component={SelectBarberByService} />
+      <Route path="/booking-step-2-service" component={SelectServiceStep} />
+      <Route path="/booking-step-3-barber" component={SelectBarberStep} />
+      <Route path="/booking-step-4-date" component={SelectDateStep} />
+      <Route path="/booking-step-5-time" component={SelectTimeStep} />
+      <Route path="/booking-step-6-summary" component={BookingSummaryStep} />
+      <Route path="/booking-step-7-confirm" component={BookingConfirmationStep} />
       <Route path="/barber/:id" component={BarberProfile} />
       <Route path="/booking" component={Booking} />
       <Route path="/bookings" component={Bookings} />

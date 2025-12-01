@@ -1,6 +1,6 @@
 import React from "react";
 import MobileShell from "@/components/MobileShell";
-import { Bell, Search, Clock, Scissors, Users } from "lucide-react";
+import { Bell, Search, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -49,48 +49,22 @@ export default function Home() {
       </div>
 
       <div className="space-y-8 pb-24">
-        {/* Quick Booking Options */}
+        {/* Quick Booking Button */}
         <div className="px-6">
-          <p className="text-xs text-muted-foreground mb-3">Como deseja agendar?</p>
-          <div className="grid grid-cols-2 gap-3">
-            {/* Service First */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setLocation("/select-booking-mode")}
-              className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-card to-card/50 p-4 hover:border-primary/50 transition-all group"
-              data-testid="button-quick-service"
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-br from-primary to-primary/50 transition-opacity" />
-              
-              <div className="relative z-10">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mb-2 group-hover:bg-primary/30 transition-all">
-                  <Scissors className="w-4 h-4 text-primary" />
-                </div>
-                <p className="font-bold text-sm text-white">Serviço 1º</p>
-                <p className="text-xs text-muted-foreground mt-1">Escolha o serviço</p>
-              </div>
-            </motion.button>
-
-            {/* Barber First */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setLocation("/select-booking-mode")}
-              className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-card to-card/50 p-4 hover:border-primary/50 transition-all group"
-              data-testid="button-quick-barber"
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-br from-primary to-primary/50 transition-opacity" />
-              
-              <div className="relative z-10">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mb-2 group-hover:bg-primary/30 transition-all">
-                  <Users className="w-4 h-4 text-primary" />
-                </div>
-                <p className="font-bold text-sm text-white">Barbeiro 1º</p>
-                <p className="text-xs text-muted-foreground mt-1">Escolha o barbeiro</p>
-              </div>
-            </motion.button>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setLocation("/booking-step-2-service")}
+            className="w-full relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-primary to-primary/80 p-6 hover:border-primary/50 transition-all group"
+            data-testid="button-booking"
+          >
+            <div className="absolute inset-0 opacity-10 group-hover:opacity-20 bg-gradient-to-br from-white to-white transition-opacity" />
+            
+            <div className="relative z-10 text-center">
+              <h3 className="font-bold text-lg text-black mb-1">Agendar Serviço</h3>
+              <p className="text-xs text-black/80">Comece seu agendamento agora</p>
+            </div>
+          </motion.button>
         </div>
 
         {/* Hero Banner */}
