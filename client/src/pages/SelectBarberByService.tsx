@@ -1,21 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Star, MapPin, Calendar, Clock } from "lucide-react";
+import { ChevronLeft, Star, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { getServices, getAvailableSlots } from "@/lib/api";
+import { getServices } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 export default function SelectBarberByService() {
   const [, setLocation] = useLocation();
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [serviceInfo, setServiceInfo] = useState<any>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [barberSlots, setBarberSlots] = useState<Record<string, string[]>>({});
-  const [loadingSlots, setLoadingSlots] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const serviceId = sessionStorage.getItem("selectedServiceId");
@@ -34,38 +30,24 @@ export default function SelectBarberByService() {
     }
   }, [selectedServiceId, services]);
 
-  // Filter barbers that offer this service
-  const barbersWithService = services
-    .filter((s: any) => s.id === selectedServiceId)
-    .reduce((acc: any[], service: any) => {
-      const existingBarber = acc.find(b => b.id === service.barberId);
-      if (!existingBarber) {
-        acc.push({
-          id: service.barberId,
-          name: service.barberId,
-          services: [service],
-        });
-      } else {
-        existingBarber.services.push(service);
-      }
-      return acc;
-    }, []);
-
-  // Load available slots when date changes
-  useEffect(() => {
-    if (selectedDate && selectedServiceId && barbersWithService.length > 0) {
-      barbersWithService.forEach(async (barber: any) => {
-        setLoadingSlots(prev => ({ ...prev, [barber.id]: true }));
-        try {
-          const slots = await getAvailableSlots(barber.id, new Date(selectedDate), [selectedServiceId]);
-          setBarberSlots(prev => ({ ...prev, [barber.id]: slots }));
-        } catch (error) {
-          setBarberSlots(prev => ({ ...prev, [barber.id]: [] }));
+  // Filter barbers that offer this service (memoized)
+  const barbersWithService = useMemo(() => {
+    return services
+      .filter((s: any) => s.id === selectedServiceId)
+      .reduce((acc: any[], service: any) => {
+        const existingBarber = acc.find(b => b.id === service.barberId);
+        if (!existingBarber) {
+          acc.push({
+            id: service.barberId,
+            name: service.barberId,
+            services: [service],
+          });
+        } else {
+          existingBarber.services.push(service);
         }
-        setLoadingSlots(prev => ({ ...prev, [barber.id]: false }));
-      });
-    }
-  }, [selectedDate, selectedServiceId, barbersWithService]);
+        return acc;
+      }, []);
+  }, [services, selectedServiceId]);
 
   const handleSelectBarber = (barberId: string) => {
     sessionStorage.removeItem("selectedServiceId");
@@ -87,18 +69,6 @@ export default function SelectBarberByService() {
       </div>
 
       <div className="p-6 space-y-4 pb-24">
-        {/* Date Picker */}
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary" />
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="flex-1 bg-secondary/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
-            data-testid="input-barber-date"
-            min={new Date().toISOString().split("T")[0]}
-          />
-        </div>
         {/* Barbers List */}
         <div className="space-y-3">
           <AnimatePresence mode="wait">
@@ -146,35 +116,9 @@ export default function SelectBarberByService() {
                       </div>
                     </div>
 
-                    {/* Available Slots */}
+                    {/* Info Badge */}
                     <div className="pt-2 border-t border-white/5">
-                      {loadingSlots[barber.id] ? (
-                        <div className="text-xs text-muted-foreground flex items-center gap-2">
-                          <Clock className="w-3 h-3" />
-                          <span>Carregando horários...</span>
-                        </div>
-                      ) : (barberSlots[barber.id]?.length || 0) > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-primary" />
-                          <div className="flex gap-1 flex-wrap">
-                            {barberSlots[barber.id]?.slice(0, 3).map((slot: string) => (
-                              <span key={slot} className="text-[10px] bg-green-500/10 text-green-400 px-2 py-1 rounded-md">
-                                {slot}
-                              </span>
-                            ))}
-                            {(barberSlots[barber.id]?.length || 0) > 3 && (
-                              <span className="text-[10px] text-muted-foreground px-2 py-1">
-                                +{(barberSlots[barber.id]?.length || 0) - 3}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-xs text-red-400 flex items-center gap-2">
-                          <Clock className="w-3 h-3" />
-                          <span>Sem horários disponíveis</span>
-                        </div>
-                      )}
+                      <p className="text-xs text-muted-foreground">Clique para ver horários disponíveis</p>
                     </div>
                   </div>
                 </motion.button>
