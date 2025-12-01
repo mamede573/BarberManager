@@ -6,12 +6,18 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import NotificationsModal from "./Notifications";
+import SecurityModal from "./Security";
+import DeleteAccountModal from "./DeleteAccount";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
   const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [editFormData, setEditFormData] = useState(() => ({
     name: user?.name || "",
     phone: user?.phone || "",
@@ -61,9 +67,9 @@ export default function Profile() {
   }
 
   const menuItems = [
-    { icon: Bell, label: "Notificações", action: () => {} },
-    { icon: Lock, label: "Segurança", action: () => {} },
-    { icon: Trash2, label: "Deletar Conta", action: () => {}, destructive: true },
+    { icon: Bell, label: "Notificações", action: () => setShowNotifications(true) },
+    { icon: Lock, label: "Segurança", action: () => setShowSecurity(true) },
+    { icon: Trash2, label: "Deletar Conta", action: () => setShowDeleteAccount(true), destructive: true },
   ];
 
   return (
@@ -269,6 +275,27 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <NotificationsModal
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        userId={user?.id}
+      />
+      <SecurityModal
+        isOpen={showSecurity}
+        onClose={() => setShowSecurity(false)}
+        userId={user?.id}
+      />
+      <DeleteAccountModal
+        isOpen={showDeleteAccount}
+        onClose={() => setShowDeleteAccount(false)}
+        userId={user?.id}
+        onDeleteSuccess={() => {
+          logout();
+          setLocation("/login");
+        }}
+      />
     </MobileShell>
   );
 }

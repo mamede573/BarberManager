@@ -4,7 +4,8 @@ import {
   type Barber, type InsertBarber, barbers,
   type Service, type InsertService, services,
   type Appointment, type InsertAppointment, appointments,
-  type Review, type InsertReview, reviews
+  type Review, type InsertReview, reviews,
+  type Notification, type InsertNotification, notifications
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -46,6 +47,14 @@ export interface IStorage {
   // Reviews
   getReviewsByBarber(barberId: string): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
+
+  // Notifications
+  getNotifications(userId: string): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(notificationId: string): Promise<Notification | undefined>;
+
+  // Account
+  deleteUser(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -170,6 +179,27 @@ export class DatabaseStorage implements IStorage {
   async createReview(review: InsertReview): Promise<Review> {
     const [created] = await db.insert(reviews).values(review).returning();
     return created;
+  }
+
+  // Notifications
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [created] = await db.insert(notifications).values(notification).returning();
+    return created;
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<Notification | undefined> {
+    const [updated] = await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, notificationId)).returning();
+    return updated;
+  }
+
+  // Account
+  async deleteUser(userId: string): Promise<boolean> {
+    await db.delete(users).where(eq(users.id, userId));
+    return true;
   }
 }
 
