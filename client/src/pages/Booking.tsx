@@ -72,7 +72,7 @@ export default function Booking() {
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
             <CalendarIcon className="w-5 h-5 text-primary" />
           </div>
-          <h2 className="text-xl font-bold font-display">Select Date</h2>
+          <h2 className="text-xl font-bold font-display">Selecione a Data</h2>
         </div>
         <div className="relative overflow-hidden bg-gradient-to-br from-card to-card/50 border border-white/10 rounded-3xl p-6 shadow-2xl">
           <div className="absolute inset-0 opacity-5">
@@ -93,7 +93,7 @@ export default function Booking() {
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
             <Clock className="w-5 h-5 text-primary" />
           </div>
-          <h2 className="text-xl font-bold font-display">Available Time Slots</h2>
+          <h2 className="text-xl font-bold font-display">Horários Disponíveis</h2>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {timeSlots.map((time, idx) => (
@@ -118,17 +118,17 @@ export default function Booking() {
             </motion.button>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground mt-4">💡 Duration: ~{bookingData?.services.reduce((acc, s) => acc + s.duration, 0) || 45} minutes</p>
+        <p className="text-xs text-muted-foreground mt-4">💡 Duração: ~{bookingData?.services.reduce((acc, s) => acc + s.duration, 0) || 45} minutos</p>
       </div>
     </div>
   );
 
   const renderStep2 = () => {
     const paymentMethods = [
-      { id: "card" as const, name: "Credit Card", desc: "Visa, Mastercard", icon: CreditCard, color: "from-blue-600 to-blue-500" },
-      { id: "pix" as const, name: "PIX", desc: "Instant transfer", icon: Smartphone, color: "from-purple-600 to-purple-500" },
-      { id: "apple" as const, name: "Apple Pay", desc: "Fast & secure", icon: Wallet, color: "from-gray-800 to-gray-700" },
-      { id: "google" as const, name: "Google Pay", desc: "One-tap payment", icon: Wallet, color: "from-red-600 to-yellow-500" },
+      { id: "card" as const, name: "Cartão de Crédito", desc: "Visa, Mastercard", icon: CreditCard, color: "from-blue-600 to-blue-500" },
+      { id: "pix" as const, name: "PIX", desc: "Transferência instantânea", icon: Smartphone, color: "from-purple-600 to-purple-500" },
+      { id: "apple" as const, name: "Apple Pay", desc: "Rápido e seguro", icon: Wallet, color: "from-gray-800 to-gray-700" },
+      { id: "google" as const, name: "Google Pay", desc: "Pagamento em um toque", icon: Wallet, color: "from-red-600 to-yellow-500" },
     ];
 
     return (
@@ -143,20 +143,20 @@ export default function Booking() {
           
           <h3 className="text-lg font-bold font-display mb-6 flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">✓</div>
-            Booking Summary
+            Resumo da Reserva
           </h3>
           
           <div className="space-y-4 relative z-10">
             <div className="flex justify-between items-center pb-3 border-b border-white/5">
-              <span className="text-sm text-muted-foreground">📅 Date</span>
-              <span className="font-bold text-white">{date?.toLocaleDateString()}</span>
+              <span className="text-sm text-muted-foreground">📅 Data</span>
+              <span className="font-bold text-white">{date?.toLocaleDateString("pt-BR")}</span>
             </div>
             <div className="flex justify-between items-center pb-3 border-b border-white/5">
-              <span className="text-sm text-muted-foreground">🕐 Time</span>
+              <span className="text-sm text-muted-foreground">🕐 Horário</span>
               <span className="font-bold text-white">{selectedTime}</span>
             </div>
             <div className="flex justify-between items-center pb-4 border-b border-white/5">
-              <span className="text-sm text-muted-foreground">✂️ Barber</span>
+              <span className="text-sm text-muted-foreground">✂️ Barbeiro</span>
               <span className="font-bold text-white">{bookingData?.barberName}</span>
             </div>
 
@@ -167,21 +167,21 @@ export default function Booking() {
                     <p className="font-semibold text-white text-sm">{service.name}</p>
                     <p className="text-xs text-muted-foreground">{service.duration} min</p>
                   </div>
-                  <span className="font-bold text-primary">${parseFloat(service.price).toFixed(2)}</span>
+                  <span className="font-bold text-primary">R$ {parseFloat(service.price).toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between items-center pt-2 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl p-3">
               <span className="font-bold text-lg text-white">Total</span>
-              <span className="font-black text-2xl text-primary" data-testid="text-booking-total">${bookingData?.total}</span>
+              <span className="font-black text-2xl text-primary" data-testid="text-booking-total">R$ {bookingData?.total}</span>
             </div>
           </div>
         </motion.div>
 
         {/* Payment Methods */}
         <div>
-          <h3 className="text-lg font-bold font-display mb-4">Choose Payment Method</h3>
+          <h3 className="text-lg font-bold font-display mb-4">Escolha o Método de Pagamento</h3>
           <div className="grid grid-cols-2 gap-3">
             {paymentMethods.map((method) => {
               const Icon = method.icon;

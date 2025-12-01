@@ -48,9 +48,9 @@ export default function Profile() {
   };
 
   const menuItems = [
-    { icon: Bell, label: "Notifications", action: () => {} },
-    { icon: Lock, label: "Security", action: () => {} },
-    { icon: Trash2, label: "Delete Account", action: () => {}, destructive: true },
+    { icon: Bell, label: "Notificações", action: () => {} },
+    { icon: Lock, label: "Segurança", action: () => {} },
+    { icon: Trash2, label: "Deletar Conta", action: () => {}, destructive: true },
   ];
 
   return (
@@ -58,7 +58,7 @@ export default function Profile() {
       <div className="space-y-6 pb-32">
         {/* Header */}
         <div className="px-6 pt-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold font-display" data-testid="text-page-title">Profile</h1>
+          <h1 className="text-2xl font-bold font-display" data-testid="text-page-title">Perfil</h1>
           <Link href="/">
             <div className="w-10 h-10 rounded-full bg-secondary/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-secondary cursor-pointer border border-white/10" data-testid="button-back">
               <ChevronLeft className="w-5 h-5" />
@@ -95,7 +95,7 @@ export default function Profile() {
                     data-testid="button-edit-profile"
                   >
                     <Edit2 className="w-3 h-3 mr-1" />
-                    Edit
+                    Editar
                   </Button>
                 )}
               </div>
@@ -104,7 +104,7 @@ export default function Profile() {
                 // Edit Mode
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Name</label>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Nome</label>
                     <input
                       type="text"
                       value={editFormData.name}
@@ -124,7 +124,7 @@ export default function Profile() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Phone</label>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Telefone</label>
                     <input
                       type="tel"
                       value={editFormData.phone}
@@ -134,7 +134,7 @@ export default function Profile() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Location</label>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Localização</label>
                     <input
                       type="text"
                       value={editFormData.location || ""}
@@ -150,7 +150,7 @@ export default function Profile() {
                       onClick={handleSaveProfile}
                       data-testid="button-save"
                     >
-                      Save Changes
+                      Salvar Mudanças
                     </Button>
                     <Button
                       size="sm"
@@ -162,7 +162,7 @@ export default function Profile() {
                       }}
                       data-testid="button-cancel"
                     >
-                      Cancel
+                      Cancelar
                     </Button>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div>
                     <h2 className="text-xl font-bold font-display" data-testid="text-user-name">{profile.name}</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Member since {profile.memberSince}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Membro desde {profile.memberSince}</p>
                   </div>
 
                   <div className="space-y-2 bg-secondary/30 rounded-xl p-3.5 border border-white/5">
@@ -206,7 +206,7 @@ export default function Profile() {
               className="bg-card border border-white/10 rounded-2xl p-4 text-center"
             >
               <p className="text-2xl font-bold font-display text-primary" data-testid="text-appointments">{profile.totalAppointments}</p>
-              <p className="text-xs text-muted-foreground mt-1">Total Bookings</p>
+              <p className="text-xs text-muted-foreground mt-1">Total de Agendamentos</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -214,8 +214,8 @@ export default function Profile() {
               transition={{ delay: 0.2 }}
               className="bg-card border border-white/10 rounded-2xl p-4 text-center"
             >
-              <p className="text-2xl font-bold font-display text-primary" data-testid="text-spent">${profile.totalSpent}</p>
-              <p className="text-xs text-muted-foreground mt-1">Total Spent</p>
+              <p className="text-2xl font-bold font-display text-primary" data-testid="text-spent">R$ {profile.totalSpent}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Gasto</p>
             </motion.div>
           </div>
         )}
@@ -259,7 +259,7 @@ export default function Profile() {
               data-testid="button-logout"
             >
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              Sair
             </Button>
           </div>
         )}

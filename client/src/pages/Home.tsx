@@ -31,7 +31,7 @@ export default function Home() {
             <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Welcome back,</p>
+            <p className="text-xs text-muted-foreground">Bem-vindo,</p>
             <h2 className="text-lg font-bold font-display">Michael</h2>
           </div>
         </div>
@@ -45,7 +45,7 @@ export default function Home() {
         <Link href="/explore">
           <div className="bg-secondary/50 backdrop-blur-sm border border-white/5 rounded-2xl p-3 flex items-center gap-3 text-muted-foreground cursor-pointer hover:border-white/10 transition-colors" data-testid="input-search">
             <Search className="w-5 h-5" />
-            <span className="text-sm">Find a barber, service, or product...</span>
+            <span className="text-sm">Procure barbeiro, serviço...</span>
           </div>
         </Link>
       </div>
@@ -56,13 +56,13 @@ export default function Home() {
           <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden group">
             <img src={interiorImage} alt="Featured" className="w-full h-full object-cover brightness-50 group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent p-5 flex flex-col justify-end items-start">
-              <span className="bg-primary text-black text-[10px] font-bold px-2 py-0.5 rounded-md mb-2">FEATURED</span>
+              <span className="bg-primary text-black text-[10px] font-bold px-2 py-0.5 rounded-md mb-2">DESTAQUE</span>
               <h3 className="text-xl font-bold font-display text-white mb-1">Royal Cuts & Shaves</h3>
-              <p className="text-xs text-gray-300 mb-3">Get 20% off your first visit this week.</p>
+              <p className="text-xs text-gray-300 mb-3">Obtenha 20% de desconto na sua primeira visita.</p>
               {barbers.length > 0 && (
                 <Link href={`/barber/${barbers[0].id}`}>
                   <Button size="sm" className="bg-white text-black hover:bg-gray-200 rounded-full text-xs h-8" data-testid="button-book-featured">
-                    Book Now
+                    Agendar Agora
                   </Button>
                 </Link>
               )}
@@ -73,8 +73,8 @@ export default function Home() {
         {/* Categories */}
         <div className="pl-6">
           <div className="flex items-center justify-between pr-6 mb-4">
-            <h3 className="text-lg font-bold font-display">Services</h3>
-            <span className="text-xs text-primary cursor-pointer">See all</span>
+            <h3 className="text-lg font-bold font-display">Serviços</h3>
+            <span className="text-xs text-primary cursor-pointer">Ver tudo</span>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 pr-6 hide-scrollbar">
             {loadingCategories ? (
@@ -100,9 +100,9 @@ export default function Home() {
         {/* Top Rated */}
         <div className="px-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold font-display">Top Rated Barbers</h3>
+            <h3 className="text-lg font-bold font-display">Barbeiros Melhores Avaliados</h3>
             <Link href="/explore">
-              <span className="text-xs text-primary cursor-pointer">View All</span>
+              <span className="text-xs text-primary cursor-pointer">Ver Todos</span>
             </Link>
           </div>
           
@@ -146,7 +146,7 @@ export default function Home() {
                         <span className="text-xs">{barber.location}, {barber.distance}</span>
                       </div>
                       <div className="flex items-center justify-between mt-auto">
-                        <span className="text-[10px] text-gray-500">Next slot: 2:00 PM</span>
+                        <span className="text-[10px] text-gray-500">Próximo slot: 14:00</span>
                         <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-black transition-colors">
                           <ArrowRight className="w-4 h-4" />
                         </div>

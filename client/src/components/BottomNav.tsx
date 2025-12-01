@@ -7,10 +7,10 @@ export default function BottomNav() {
   const [location] = useLocation();
 
   const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: Search, label: "Explore", path: "/explore" },
-    { icon: Calendar, label: "Bookings", path: "/bookings" },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: Home, label: "Início", path: "/" },
+    { icon: Search, label: "Explorar", path: "/explore" },
+    { icon: Calendar, label: "Reservas", path: "/bookings" },
+    { icon: User, label: "Perfil", path: "/profile" },
   ];
 
   return (

@@ -26,13 +26,13 @@ export default function Explore() {
   return (
     <MobileShell>
       <div className="px-6 pt-16 pb-4 sticky top-0 bg-background z-30">
-        <h2 className="text-2xl font-bold font-display mb-4">Explore</h2>
+        <h2 className="text-2xl font-bold font-display mb-4">Explorar</h2>
         <div className="flex gap-3 mb-4">
           <div className="flex-1 bg-card border border-white/5 rounded-xl p-3 flex items-center gap-3 text-muted-foreground">
             <Search className="w-5 h-5" />
             <input 
               type="text" 
-              placeholder="Search barbers..." 
+              placeholder="Procure barbeiros..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50 w-full text-sm"
@@ -53,7 +53,7 @@ export default function Explore() {
             )}
             data-testid="button-view-list"
           >
-            <List className="w-4 h-4" /> List
+            <List className="w-4 h-4" /> Lista
           </button>
           <button 
             onClick={() => setView("map")}
@@ -63,7 +63,7 @@ export default function Explore() {
             )}
             data-testid="button-view-map"
           >
-            <MapIcon className="w-4 h-4" /> Map
+            <MapIcon className="w-4 h-4" /> Mapa
           </button>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function Explore() {
             ))}
             <div className="text-center p-6 z-10">
               <MapIcon className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-muted-foreground text-sm">Map View</p>
+              <p className="text-muted-foreground text-sm">Visualização de Mapa</p>
             </div>
           </div>
         )}

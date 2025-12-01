@@ -120,8 +120,8 @@ export default function Bookings() {
         {/* Header */}
         <div className="px-6 pt-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold font-display" data-testid="text-page-title">My Bookings</h1>
-            <p className="text-xs text-muted-foreground mt-1">{filteredBookings.length} appointments</p>
+            <h1 className="text-2xl font-bold font-display" data-testid="text-page-title">Minhas Reservas</h1>
+            <p className="text-xs text-muted-foreground mt-1">{filteredBookings.length} agendamentos</p>
           </div>
           <Link href="/">
             <div className="w-10 h-10 rounded-full bg-secondary/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-secondary cursor-pointer border border-white/10" data-testid="button-back">
@@ -132,7 +132,9 @@ export default function Bookings() {
 
         {/* Filter Tabs */}
         <div className="px-6 flex gap-2">
-          {(["all", "upcoming", "completed"] as const).map((tab) => (
+          {(["all", "upcoming", "completed"] as const).map((tab) => {
+            const labels = { all: "Todos", upcoming: "Próximos", completed: "Concluídos" };
+            return (
             <motion.button
               key={tab}
               onClick={() => setFilter(tab)}
@@ -144,9 +146,10 @@ export default function Bookings() {
               )}
               data-testid={`filter-${tab}`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {labels[tab]}
             </motion.button>
-          ))}
+            );
+          })}
         </div>
 
         {/* Bookings List */}
@@ -179,8 +182,8 @@ export default function Bookings() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-primary" data-testid={`booking-price-${booking.id}`}>${booking.totalPrice}</p>
-                      <p className="text-xs text-muted-foreground">{booking.paymentStatus}</p>
+                      <p className="text-sm font-bold text-primary" data-testid={`booking-price-${booking.id}`}>R$ {booking.totalPrice}</p>
+                      <p className="text-xs text-muted-foreground">{booking.paymentStatus === "paid" ? "Pago" : "Pendente"}</p>
                     </div>
                   </div>
 
@@ -195,7 +198,7 @@ export default function Bookings() {
                       <span className="text-muted-foreground" data-testid={`booking-time-${booking.id}`}>{booking.time}</span>
                     </div>
                     <div className="pt-2">
-                      <p className="text-xs text-muted-foreground mb-2">Services:</p>
+                      <p className="text-xs text-muted-foreground mb-2">Serviços:</p>
                       <div className="flex flex-wrap gap-1.5">
                         {booking.services.map((service) => (
                           <span key={service} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-lg border border-primary/20">
@@ -216,7 +219,7 @@ export default function Bookings() {
                           className="flex-1 text-xs"
                           data-testid={`button-reschedule-${booking.id}`}
                         >
-                          Reschedule
+                          Remarcar
                         </Button>
                         <Button
                           variant="outline"
@@ -224,7 +227,7 @@ export default function Bookings() {
                           className="flex-1 text-xs"
                           data-testid={`button-cancel-${booking.id}`}
                         >
-                          Cancel
+                          Cancelar
                         </Button>
                       </>
                     ) : booking.status === "completed" && !booking.rating ? (
@@ -234,7 +237,7 @@ export default function Bookings() {
                         data-testid={`button-review-${booking.id}`}
                       >
                         <MessageCircle className="w-3 h-3 mr-1" />
-                        Leave Review
+                        Deixar Avaliação
                       </Button>
                     ) : (
                       <Button
@@ -243,7 +246,7 @@ export default function Bookings() {
                         className="w-full text-xs"
                         data-testid={`button-rebook-${booking.id}`}
                       >
-                        Book Again
+                        Agendar Novamente
                       </Button>
                     )}
                   </div>
@@ -256,14 +259,14 @@ export default function Bookings() {
                 className="text-center py-12"
               >
                 <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">No bookings found</p>
+                <p className="text-muted-foreground text-sm">Nenhuma reserva encontrada</p>
                 <Button
                   size="sm"
                   className="mt-4 bg-primary text-black hover:bg-primary/90"
                   onClick={() => setLocation("/")}
                   data-testid="button-explore-barbers"
                 >
-                  Explore Barbers
+                  Explorar Barbeiros
                 </Button>
               </motion.div>
             )}

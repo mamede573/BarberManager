@@ -133,15 +133,15 @@ export default function BarberProfile() {
         <div className="space-y-8">
           {/* About */}
           <section>
-            <h3 className="text-lg font-bold font-display mb-2">About</h3>
+            <h3 className="text-lg font-bold font-display mb-2">Sobre</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {barber.bio || "No description available."}
+              {barber.bio || "Sem descrição disponível."}
             </p>
           </section>
 
           {/* Services */}
           <section>
-            <h3 className="text-lg font-bold font-display mb-4">Services</h3>
+            <h3 className="text-lg font-bold font-display mb-4">Serviços</h3>
             <div className="grid grid-cols-1 gap-4">
               {loadingServices ? (
                 Array.from({ length: 4 }).map((_, i) => (
@@ -205,7 +205,7 @@ export default function BarberProfile() {
                           </div>
                         </div>
                         <div className="text-right ml-3">
-                          <span className="font-bold font-display text-lg text-primary">${parseFloat(service.price).toFixed(0)}</span>
+                          <span className="font-bold font-display text-lg text-primary">R$ {parseFloat(service.price).toFixed(0)}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -228,8 +228,8 @@ export default function BarberProfile() {
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs text-muted-foreground mb-0.5">{selectedServices.length} services selected</p>
-                <p className="text-2xl font-bold font-display text-white" data-testid="text-total-price">${total.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">{selectedServices.length} serviço(s) selecionado(s)</p>
+                <p className="text-2xl font-bold font-display text-white" data-testid="text-total-price">R$ {total.toFixed(2)}</p>
               </div>
               <Button 
                 size="lg" 
@@ -237,7 +237,7 @@ export default function BarberProfile() {
                 onClick={handleBooking}
                 data-testid="button-book-appointment"
               >
-                Book Appointment
+                Agendar
               </Button>
             </div>
           </motion.div>
