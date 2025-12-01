@@ -1,25 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, LogIn } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { user, login } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
     try {
-      // Simulating login - in a real app, this would call an API
-      setTimeout(() => {
-        setLocation("/");
-      }, 500);
-    } catch (error) {
-      console.error("Login failed:", error);
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || "Erro ao fazer login. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -49,6 +56,18 @@ export default function Login() {
           </h1>
           <p className="text-muted-foreground">Bem-vindo de volta</p>
         </motion.div>
+
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
+            data-testid="text-error"
+          >
+            {error}
+          </motion.div>
+        )}
 
         {/* Login Form */}
         <motion.form

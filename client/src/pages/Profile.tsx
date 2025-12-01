@@ -1,51 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MobileShell from "@/components/MobileShell";
-import { ChevronLeft, Edit2, LogOut, Bell, Lock, Trash2, Phone, Mail, MapPin, User as UserIcon } from "lucide-react";
+import { ChevronLeft, Edit2, LogOut, Bell, Lock, Trash2, Phone, Mail, MapPin, User as UserIcon, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatar: string;
-  location?: string;
-  totalAppointments: number;
-  totalSpent: string;
-  memberSince: string;
-}
-
-// Mock user data - in a real app, this would come from the API
-const mockUserProfile: UserProfile = {
-  id: "demo-user-id",
-  name: "Michael",
-  email: "michael@example.com",
-  phone: "+1 (555) 123-4567",
-  avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-  location: "Downtown, City Center",
-  totalAppointments: 12,
-  totalSpent: "450.00",
-  memberSince: "January 2024",
-};
+import { useAuth } from "@/lib/auth-context";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
+  const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(mockUserProfile);
-  const [editFormData, setEditFormData] = useState(profile);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editFormData, setEditFormData] = useState(() => ({
+    name: user?.name || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
+  }));
 
-  const handleSaveProfile = () => {
-    setProfile(editFormData);
-    setIsEditing(false);
+  useEffect(() => {
+    if (!user) {
+      setLocation("/login");
+    } else {
+      setEditFormData({
+        name: user.name || "",
+        phone: user.phone || "",
+        email: user.email || "",
+      });
+    }
+  }, [user, setLocation]);
+
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    try {
+      await updateUser({
+        name: editFormData.name,
+        phone: editFormData.phone,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    // In a real app, this would clear auth state
+    logout();
     setLocation("/login");
   };
+
+  if (!user) {
+    return (
+      <MobileShell>
+        <div className="flex items-center justify-center h-screen">
+          <Loader className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </MobileShell>
+    );
+  }
 
   const menuItems = [
     { icon: Bell, label: "Notificações", action: () => {} },
@@ -81,8 +94,8 @@ export default function Profile() {
               {/* Avatar */}
               <div className="flex items-end gap-4 mb-6">
                 <img
-                  src={profile.avatar}
-                  alt={profile.name}
+                  src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`}
+                  alt={user.name}
                   className="w-24 h-24 rounded-full border-4 border-card/80 backdrop-blur-md object-cover shadow-lg"
                   data-testid="avatar-profile"
                 />
@@ -118,8 +131,8 @@ export default function Profile() {
                     <input
                       type="email"
                       value={editFormData.email}
-                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted-foreground outline-none focus:border-primary/50"
+                      disabled
+                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-muted-foreground placeholder-muted-foreground outline-none"
                       data-testid="input-email"
                     />
                   </div>
@@ -133,24 +146,15 @@ export default function Profile() {
                       data-testid="input-phone"
                     />
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Localização</label>
-                    <input
-                      type="text"
-                      value={editFormData.location || ""}
-                      onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-                      className="w-full bg-secondary/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-muted-foreground outline-none focus:border-primary/50"
-                      data-testid="input-location"
-                    />
-                  </div>
                   <div className="flex gap-2 pt-2">
                     <Button
                       size="sm"
                       className="flex-1 bg-primary text-black hover:bg-primary/90"
                       onClick={handleSaveProfile}
+                      disabled={isLoading}
                       data-testid="button-save"
                     >
-                      Salvar Mudanças
+                      {isLoading ? "Salvando..." : "Salvar Mudanças"}
                     </Button>
                     <Button
                       size="sm"
@@ -158,8 +162,15 @@ export default function Profile() {
                       className="flex-1"
                       onClick={() => {
                         setIsEditing(false);
-                        setEditFormData(profile);
+                        if (user) {
+                          setEditFormData({
+                            name: user.name || "",
+                            phone: user.phone || "",
+                            email: user.email || "",
+                          });
+                        }
                       }}
+                      disabled={isLoading}
                       data-testid="button-cancel"
                     >
                       Cancelar
@@ -170,25 +181,19 @@ export default function Profile() {
                 // View Mode
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-xl font-bold font-display" data-testid="text-user-name">{profile.name}</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Membro desde {profile.memberSince}</p>
+                    <h2 className="text-xl font-bold font-display" data-testid="text-user-name">{user.name}</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Membro desde {user.createdAt ? new Date(user.createdAt).toLocaleDateString("pt-BR") : "---"}</p>
                   </div>
 
                   <div className="space-y-2 bg-secondary/30 rounded-xl p-3.5 border border-white/5">
                     <div className="flex items-center gap-3 text-sm">
                       <Mail className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground" data-testid="text-email">{profile.email}</span>
+                      <span className="text-muted-foreground" data-testid="text-email">{user.email}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Phone className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground" data-testid="text-phone">{profile.phone}</span>
+                      <span className="text-muted-foreground" data-testid="text-phone">{user.phone || "---"}</span>
                     </div>
-                    {profile.location && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <span className="text-muted-foreground" data-testid="text-location">{profile.location}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -205,7 +210,7 @@ export default function Profile() {
               transition={{ delay: 0.1 }}
               className="bg-card border border-white/10 rounded-2xl p-4 text-center"
             >
-              <p className="text-2xl font-bold font-display text-primary" data-testid="text-appointments">{profile.totalAppointments}</p>
+              <p className="text-2xl font-bold font-display text-primary" data-testid="text-appointments">0</p>
               <p className="text-xs text-muted-foreground mt-1">Total de Agendamentos</p>
             </motion.div>
             <motion.div
@@ -214,7 +219,7 @@ export default function Profile() {
               transition={{ delay: 0.2 }}
               className="bg-card border border-white/10 rounded-2xl p-4 text-center"
             >
-              <p className="text-2xl font-bold font-display text-primary" data-testid="text-spent">R$ {profile.totalSpent}</p>
+              <p className="text-2xl font-bold font-display text-primary" data-testid="text-spent">R$ 0</p>
               <p className="text-xs text-muted-foreground mt-1">Total Gasto</p>
             </motion.div>
           </div>

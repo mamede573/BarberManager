@@ -7,11 +7,13 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getServices } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/lib/auth-context";
 
 // Fallback images
 import interiorImage from "@assets/generated_images/dark_modern_barber_shop_interior_vertical.png";
 
 export default function Home() {
+  const { user } = useAuth();
   const { data: services = [], isLoading: loadingServices } = useQuery({
     queryKey: ["services"],
     queryFn: getServices,
@@ -23,11 +25,11 @@ export default function Home() {
       <div className="px-6 pt-16 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-            <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" className="w-full h-full object-cover" />
+            <img src={user?.avatar || `https://i.pravatar.cc/150?u=${user?.id}`} alt="User" className="w-full h-full object-cover" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Bem-vindo,</p>
-            <h2 className="text-lg font-bold font-display">Michael</h2>
+            <h2 className="text-lg font-bold font-display">{user?.name || "Usuário"}</h2>
           </div>
         </div>
         <Button size="icon" variant="ghost" className="rounded-full hover:bg-white/5" data-testid="button-notifications">
